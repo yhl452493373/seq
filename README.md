@@ -13,7 +13,7 @@
 
 ```xml
 
-<build>
+<project>
     <dependencies>
         <dependency>
             <groupId>com.yanghuanglin</groupId>
@@ -33,35 +33,39 @@
             </exclusions>
         </dependency>
     </dependencies>
-
-    <!-- 每次执行mvn clean时，自动安装指定的jar包 -->
-    <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-install-plugin</artifactId>
-        <version>2.5</version>
-        <executions>
-            <execution>
-                <id>install-external</id>
-                <phase>clean</phase>
-                <goals>
-                    <goal>install-file</goal>
-                </goals>
-                <configuration>
-                    <!-- ${project.basedir}表示当前项目的根目录 -->
-                    <file>${project.basedir}/lib/seq-1.0.0.jar</file>
-                    <pomFile>${pom.basedir}/lib/seq-1.0.0-pom.xml</pomFile>
-                    <sources>${project.basedir}/lib/seq-1.0.0-sources.jar</sources>
-                    <repositoryLayout>default</repositoryLayout>
-                    <groupId>com.yanghuanglin</groupId>
-                    <artifactId>seq</artifactId>
-                    <version>1.0.0</version>
-                    <packaging>jar</packaging>
-                    <generatePom>true</generatePom>
-                </configuration>
-            </execution>
-        </executions>
-    </plugin>
-</build>
+    
+    <build>
+        <plugins>
+            <!-- 每次执行mvn clean时，自动安装指定的jar包 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.5</version>
+                <executions>
+                    <execution>
+                        <id>install-external</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>install-file</goal>
+                        </goals>
+                        <configuration>
+                            <!-- ${project.basedir}表示当前项目的根目录 -->
+                            <file>${project.basedir}/lib/seq-1.0.0.jar</file>
+                            <pomFile>${pom.basedir}/lib/seq-1.0.0-pom.xml</pomFile>
+                            <sources>${project.basedir}/lib/seq-1.0.0-sources.jar</sources>
+                            <repositoryLayout>default</repositoryLayout>
+                            <groupId>com.yanghuanglin</groupId>
+                            <artifactId>seq</artifactId>
+                            <version>1.0.0</version>
+                            <packaging>jar</packaging>
+                            <generatePom>true</generatePom>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
 ```
 
 + springboot中配置方式一（优先）：直接注入已有jdbcTemplate和transactionTemplate
