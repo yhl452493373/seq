@@ -16,7 +16,7 @@
 <build>
     <dependencies>
         <dependency>
-            <groupId>com.yanghuanglincom.yanghuanglin</groupId>
+            <groupId>com.yanghuanglin</groupId>
             <artifactId>seq</artifactId>
             <version>1.0.0</version>
             <exclusions>
@@ -67,7 +67,7 @@
 + springboot中配置方式一（优先）：直接注入已有jdbcTemplate和transactionTemplate
 
 ```java
-package com.yang.springseq.config;
+package com.yanghuanglin.springseq.config;
 
 import com.yanghuanglin.seq.config.GeneratorConfig;
 import com.yanghuanglin.seq.config.TableConfig;
@@ -138,7 +138,7 @@ public class SeqGeneratorConfig {
 + springboot中配置方式二：注入已有的dataSource或自行构建dataSource，通过dataSource自动生成jdbcTemplate和transactionTemplate
 
 ```java
-package com.yang.springseq.config;
+package com.yanghuanglin.springseq.config;
 
 import com.yanghuanglin.seq.config.GeneratorConfig;
 import com.yanghuanglin.seq.config.TableConfig;
@@ -201,7 +201,7 @@ public class SeqGeneratorConfig {
 + 使用：
 
 ```java
-package com.yang.springseq.config;
+package com.yanghuanglin.springseq.config;
 
 import com.yanghuanglin.seq.generator.Generator;
 import com.yanghuanglin.seq.po.Sequences;
