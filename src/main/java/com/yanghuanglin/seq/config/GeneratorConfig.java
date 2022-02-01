@@ -1,4 +1,4 @@
-package com.cdhncy.seq.config;
+package com.yanghuanglin.seq.config;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;

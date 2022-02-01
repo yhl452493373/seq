@@ -16,7 +16,7 @@
 <build>
     <dependencies>
         <dependency>
-            <groupId>com.cdhncy</groupId>
+            <groupId>com.yanghuanglincom.yanghuanglin</groupId>
             <artifactId>seq</artifactId>
             <version>1.0.0</version>
             <exclusions>
@@ -52,7 +52,7 @@
                     <pomFile>${pom.basedir}/lib/seq-1.0.0-pom.xml</pomFile>
                     <sources>${project.basedir}/lib/seq-1.0.0-sources.jar</sources>
                     <repositoryLayout>default</repositoryLayout>
-                    <groupId>com.cdhncy</groupId>
+                    <groupId>com.yanghuanglincom.yanghuanglin</groupId>
                     <artifactId>seq</artifactId>
                     <version>1.0.0</version>
                     <packaging>jar</packaging>
@@ -69,10 +69,10 @@
 ```java
 package com.yang.springseq.config;
 
-import com.cdhncy.seq.config.GeneratorConfig;
-import com.cdhncy.seq.config.TableConfig;
-import com.cdhncy.seq.generator.Generator;
-import com.cdhncy.seq.generator.impl.SequencesGenerator;
+import com.yanghuanglin.seq.config.GeneratorConfig;
+import com.yanghuanglin.seq.config.TableConfig;
+import com.yanghuanglin.seq.generator.Generator;
+import com.yanghuanglin.seq.generator.impl.SequencesGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -140,14 +140,12 @@ public class SeqGeneratorConfig {
 ```java
 package com.yang.springseq.config;
 
-import com.cdhncy.seq.config.GeneratorConfig;
-import com.cdhncy.seq.config.TableConfig;
-import com.cdhncy.seq.generator.Generator;
-import com.cdhncy.seq.generator.impl.SequencesGenerator;
+import com.yanghuanglin.seq.config.GeneratorConfig;
+import com.yanghuanglin.seq.config.TableConfig;
+import com.yanghuanglin.seq.generator.Generator;
+import com.yanghuanglin.seq.generator.impl.SequencesGenerator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.annotation.Resource;
 import javax.sql.DataSource;
@@ -205,8 +203,8 @@ public class SeqGeneratorConfig {
 ```java
 package com.yang.springseq.config;
 
-import com.cdhncy.seq.generator.Generator;
-import com.cdhncy.seq.po.Sequences;
+import com.yanghuanglin.seq.generator.Generator;
+import com.yanghuanglin.seq.po.Sequences;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -277,7 +275,7 @@ GeneratorConfig配置项，通过set方法设置
 | transactionManager  | org.springframework.jdbc.datasource.DataSourceTransactionManager | null             | 事务管理器    |
 | autoCreate          | Boolean                                                          | true             | 开启自动建表   |
 | step                | Integer                                                          | 1                | 序号增加时的步长 |
-| tableConfig         | com.cdhncy.seq.config.TableConfig                                | TableConfig的默认配置 | 表配置      |
+| tableConfig         | com.yanghuanglin.seq.config.TableConfig                                | TableConfig的默认配置 | 表配置      |
 
 以上配置中，jdbcTemplate和transactionTemplate优先级最高，如果jdbcTemplate、transactionTemplate、dataSource、transactionManager同时配置，则dataSource和transactionManager无效；
 进行这几种组合：dataSource+autoCreate+step+tableConfig，jdbcTemplate+transactionTemplate+autoCreate+step+tableConfig，jdbcTemplate+transactionManager+autoCreate+step+tableConfig
@@ -286,11 +284,11 @@ GeneratorConfig配置项，通过set方法设置
 Generator方法如下：
 
 ```java
-package com.cdhncy.seq.generator;
+package com.yanghuanglin.seq.generator;
 
-import com.cdhncy.seq.po.Sequences;
-import com.cdhncy.seq.po.SequencesUnlock;
-import com.cdhncy.seq.po.SequencesUnused;
+import com.yanghuanglin.seq.po.Sequences;
+import com.yanghuanglin.seq.po.SequencesUnlock;
+import com.yanghuanglin.seq.po.SequencesUnused;
 
 import java.util.Date;
 

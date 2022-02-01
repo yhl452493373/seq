@@ -1,6 +1,6 @@
-package com.cdhncy.seq.dao;
+package com.yanghuanglin.seq.dao;
 
-import com.cdhncy.seq.po.SequencesUnused;
+import com.yanghuanglin.seq.po.SequencesUnused;
 
 import java.util.List;
 

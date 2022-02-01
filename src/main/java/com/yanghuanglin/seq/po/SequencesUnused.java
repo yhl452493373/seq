@@ -1,4 +1,4 @@
-package com.cdhncy.seq.po;
+package com.yanghuanglin.seq.po;
 
 
 /**

@@ -1,4 +1,4 @@
-package com.cdhncy.seq.config;
+package com.yanghuanglin.seq.config;
 
 /**
  * 生成器对应的数据库表和字段配置

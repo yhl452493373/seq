@@ -1,6 +1,6 @@
-package com.cdhncy.seq.dao;
+package com.yanghuanglin.seq.dao;
 
-import com.cdhncy.seq.po.Sequences;
+import com.yanghuanglin.seq.po.Sequences;
 
 /**
  * @author yanghuanglin

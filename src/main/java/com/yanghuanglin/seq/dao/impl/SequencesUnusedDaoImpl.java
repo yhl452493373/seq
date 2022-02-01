@@ -1,8 +1,8 @@
-package com.cdhncy.seq.dao.impl;
+package com.yanghuanglin.seq.dao.impl;
 
-import com.cdhncy.seq.config.TableConfig;
-import com.cdhncy.seq.dao.SequencesUnusedDao;
-import com.cdhncy.seq.po.SequencesUnused;
+import com.yanghuanglin.seq.config.TableConfig;
+import com.yanghuanglin.seq.dao.SequencesUnusedDao;
+import com.yanghuanglin.seq.po.SequencesUnused;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;

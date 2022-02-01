@@ -1,6 +1,6 @@
-package com.cdhncy.seq.dao;
+package com.yanghuanglin.seq.dao;
 
-import com.cdhncy.seq.po.SequencesUnlock;
+import com.yanghuanglin.seq.po.SequencesUnlock;
 
 import java.util.Date;
 import java.util.List;

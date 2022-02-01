@@ -1,8 +1,8 @@
-package com.cdhncy.seq.dao.impl;
+package com.yanghuanglin.seq.dao.impl;
 
-import com.cdhncy.seq.config.TableConfig;
-import com.cdhncy.seq.dao.SequencesUnlockDao;
-import com.cdhncy.seq.po.SequencesUnlock;
+import com.yanghuanglin.seq.config.TableConfig;
+import com.yanghuanglin.seq.dao.SequencesUnlockDao;
+import com.yanghuanglin.seq.po.SequencesUnlock;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 

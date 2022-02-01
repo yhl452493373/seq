@@ -1,8 +1,8 @@
-import com.cdhncy.seq.config.GeneratorConfig;
-import com.cdhncy.seq.config.TableConfig;
-import com.cdhncy.seq.po.Sequences;
-import com.cdhncy.seq.generator.Generator;
-import com.cdhncy.seq.generator.impl.SequencesGenerator;
+import com.yanghuanglin.seq.config.GeneratorConfig;
+import com.yanghuanglin.seq.config.TableConfig;
+import com.yanghuanglin.seq.po.Sequences;
+import com.yanghuanglin.seq.generator.Generator;
+import com.yanghuanglin.seq.generator.impl.SequencesGenerator;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import org.junit.Test;
 

@@ -1,8 +1,8 @@
-package com.cdhncy.seq.generator;
+package com.yanghuanglin.seq.generator;
 
-import com.cdhncy.seq.po.Sequences;
-import com.cdhncy.seq.po.SequencesUnlock;
-import com.cdhncy.seq.po.SequencesUnused;
+import com.yanghuanglin.seq.po.Sequences;
+import com.yanghuanglin.seq.po.SequencesUnlock;
+import com.yanghuanglin.seq.po.SequencesUnused;
 
 import java.util.Date;
 
