@@ -52,7 +52,7 @@
                     <pomFile>${pom.basedir}/lib/seq-1.0.0-pom.xml</pomFile>
                     <sources>${project.basedir}/lib/seq-1.0.0-sources.jar</sources>
                     <repositoryLayout>default</repositoryLayout>
-                    <groupId>com.yanghuanglincom.yanghuanglin</groupId>
+                    <groupId>com.yanghuanglin</groupId>
                     <artifactId>seq</artifactId>
                     <version>1.0.0</version>
                     <packaging>jar</packaging>
