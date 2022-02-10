@@ -51,6 +51,16 @@ public interface Generator {
     String generate(String key, String type, Integer minLength);
 
     /**
+     * 将{@link #generate(String, String)}得到的序号对象格式化为补零后的序号字符串。实际上只会用到{@link Sequences#getSeq()}属性
+     *
+     * @param sequences 生成的序号对象
+     * @param minLength 序号数字最小长度
+     * @param pattern   格式
+     * @return 格式化后的字符串
+     */
+    String format(Sequences sequences, Integer minLength, String pattern);
+
+    /**
      * 将生成的序号对象格式化为指定格式
      * <p/>
      * pattern支持：{@link #YEAR}(当前年份)、{@link #MONTH}(当前月份)、{@link #DAY}(当前日期)、{@link #SEQ}(生成的字符串序号)四个变量

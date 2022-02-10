@@ -133,6 +133,11 @@ public class SequencesGenerator implements Generator {
     }
 
     @Override
+    public String format(Sequences sequences, Integer minLength, String pattern) {
+        return format(sequences.getSeq(), minLength, pattern);
+    }
+
+    @Override
     public String format(Long seq, Integer minLength, String pattern) {
         return format(seq, null, minLength, pattern);
     }
