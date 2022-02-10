@@ -8,7 +8,7 @@
 
 使用方法：
 
-+ 在项目中放置jar包的地方把seq-1.0.0.jar、seq-1.0.0-sources.jar、seq-1.0.0-pom.xml复制过去
++ 在项目中放置jar包的地方把seq-1.1.0.jar、seq-1.1.0-sources.jar、seq-1.1.0-pom.xml复制过去
 + 在pom.xml中增加以下内容，然后执行maven命令：mvn clean
 
 ```xml
@@ -50,9 +50,9 @@
                         </goals>
                         <configuration>
                             <!-- ${project.basedir}表示当前项目的根目录 -->
-                            <file>${project.basedir}/lib/seq-1.0.0.jar</file>
-                            <pomFile>${pom.basedir}/lib/seq-1.0.0-pom.xml</pomFile>
-                            <sources>${project.basedir}/lib/seq-1.0.0-sources.jar</sources>
+                            <file>${project.basedir}/lib/seq-1.1.0.jar</file>
+                            <pomFile>${pom.basedir}/lib/seq-1.1.0-pom.xml</pomFile>
+                            <sources>${project.basedir}/lib/seq-1.1.0-sources.jar</sources>
                             <repositoryLayout>default</repositoryLayout>
                             <groupId>com.yanghuanglin</groupId>
                             <artifactId>seq</artifactId>
