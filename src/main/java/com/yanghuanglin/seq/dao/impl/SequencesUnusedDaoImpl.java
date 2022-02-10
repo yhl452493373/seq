@@ -16,6 +16,7 @@ import java.util.List;
  * @author yanghuanglin
  * @since 2022/1/28
  */
+@SuppressWarnings("SqlResolve")
 public class SequencesUnusedDaoImpl implements SequencesUnusedDao {
     private final JdbcTemplate jdbcTemplate;
     private final TableConfig tableConfig;
@@ -50,6 +51,14 @@ public class SequencesUnusedDaoImpl implements SequencesUnusedDao {
     @Override
     public boolean delete(SequencesUnused sequencesUnused) {
         String sql = "delete from `%s_ununsed` where `%s`=? and `%s`=? and `%s`=?";
+        sql = String.format(sql, tableConfig.getTable(), tableConfig.getKeyColumn(), tableConfig.getTypeColumn(), tableConfig.getSeqColumn());
+        int result = this.jdbcTemplate.update(sql, sequencesUnused.getKey(), sequencesUnused.getType(), sequencesUnused.getSeq());
+        return result != 0;
+    }
+
+    @Override
+    public boolean save(SequencesUnused sequencesUnused) {
+        String sql = "insert into `%s_ununsed`(`%s`,`%s`,`%s`) values(?,?,?)";
         sql = String.format(sql, tableConfig.getTable(), tableConfig.getKeyColumn(), tableConfig.getTypeColumn(), tableConfig.getSeqColumn());
         int result = this.jdbcTemplate.update(sql, sequencesUnused.getKey(), sequencesUnused.getType(), sequencesUnused.getSeq());
         return result != 0;

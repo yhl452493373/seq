@@ -35,6 +35,12 @@ public class Sequences {
         this.type = type;
     }
 
+    public Sequences(String key, String type, Long seq) {
+        this.key = key;
+        this.type = type;
+        this.seq = seq;
+    }
+
     public Sequences(SequencesUnused sequencesUnused) {
         this.key = sequencesUnused.getKey();
         this.type = sequencesUnused.getType();

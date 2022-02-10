@@ -11,6 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
  * @author yanghuanglin
  * @since 2022/1/28
  */
+@SuppressWarnings("SqlResolve")
 public class SequencesDaoImpl implements SequencesDao {
     private final JdbcTemplate jdbcTemplate;
     private final TableConfig tableConfig;

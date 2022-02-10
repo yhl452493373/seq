@@ -13,6 +13,7 @@ import java.util.List;
  * @author yanghuanglin
  * @since 2022/1/28
  */
+@SuppressWarnings("SqlResolve")
 public class SequencesUnlockDaoImpl implements SequencesUnlockDao {
     private final JdbcTemplate jdbcTemplate;
     private final TableConfig tableConfig;

@@ -2,22 +2,25 @@ package com.yanghuanglin.seq.generator.impl;
 
 import com.yanghuanglin.seq.config.GeneratorConfig;
 import com.yanghuanglin.seq.dao.SequencesDao;
-import com.yanghuanglin.seq.dao.SequencesUnusedDao;
 import com.yanghuanglin.seq.dao.SequencesUnlockDao;
+import com.yanghuanglin.seq.dao.SequencesUnusedDao;
 import com.yanghuanglin.seq.dao.impl.SequencesDaoImpl;
-import com.yanghuanglin.seq.dao.impl.SequencesUnusedDaoImpl;
 import com.yanghuanglin.seq.dao.impl.SequencesUnlockDaoImpl;
-import com.yanghuanglin.seq.po.Sequences;
-import com.yanghuanglin.seq.po.SequencesUnused;
-import com.yanghuanglin.seq.po.SequencesUnlock;
+import com.yanghuanglin.seq.dao.impl.SequencesUnusedDaoImpl;
 import com.yanghuanglin.seq.generator.Generator;
+import com.yanghuanglin.seq.po.Sequences;
+import com.yanghuanglin.seq.po.SequencesUnlock;
+import com.yanghuanglin.seq.po.SequencesUnused;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.support.JdbcTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 public class SequencesGenerator implements Generator {
     private final TransactionTemplate transactionTemplate;
@@ -184,5 +187,11 @@ public class SequencesGenerator implements Generator {
         sequencesUnusedDao.saveBatch(sequencesUnusedList);
         //删除指定时间段内使用中表的数据
         sequencesUnlockDao.deleteByDate(begin, end);
+    }
+
+    @Override
+    public void release(Sequences sequences) {
+        sequencesUnlockDao.delete(new SequencesUnlock(sequences));
+        sequencesUnusedDao.save(new SequencesUnused(sequences));
     }
 }

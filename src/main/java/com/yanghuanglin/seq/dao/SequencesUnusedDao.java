@@ -26,6 +26,11 @@ public interface SequencesUnusedDao {
     boolean delete(SequencesUnused sequencesUnused);
 
     /**
+     * 保存空闲序号
+     */
+    boolean save(SequencesUnused sequencesUnused);
+
+    /**
      * 批量保存空闲序号
      */
     boolean saveBatch(List<SequencesUnused> sequencesUnusedList);

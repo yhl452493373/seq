@@ -111,4 +111,11 @@ public interface Generator {
      * @param end   结束时间
      */
     void release(Date begin, Date end);
+
+    /**
+     * 释放指定序号。一般用于业务对象删除后，对应序号需要回收使用时。
+     *
+     * @param sequences 需要释放的序号。一般是一个通过{@link Sequences#setKey(String)}、{@link Sequences#setType(String)}、{@link Sequences#setSeq(Long)}三方法一起手动构建或通过{@link Sequences#Sequences(String, String, Long)}构造方法构建的实例对象
+     */
+    void release(Sequences sequences);
 }
