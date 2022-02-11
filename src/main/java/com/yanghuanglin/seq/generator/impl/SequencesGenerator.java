@@ -30,6 +30,7 @@ public class SequencesGenerator implements Generator {
     private final SequencesUnusedDao sequencesUnusedDao;
     private final SequencesUnlockDao sequencesUnlockDao;
     private final Integer step;
+    private final String type;
 
     public SequencesGenerator(GeneratorConfig generatorConfig) {
         //数据库操作模板
@@ -66,6 +67,7 @@ public class SequencesGenerator implements Generator {
         this.sequencesUnusedDao = new SequencesUnusedDaoImpl(jdbcTemplate, generatorConfig.getTableConfig());
         this.sequencesUnlockDao = new SequencesUnlockDaoImpl(jdbcTemplate, generatorConfig.getTableConfig());
         this.step = generatorConfig.getStep();
+        this.type = generatorConfig.getType();
 
         autoCreateTable(generatorConfig.getAutoCreate());
     }
@@ -79,6 +81,11 @@ public class SequencesGenerator implements Generator {
         this.sequencesDao.createTable();
         this.sequencesUnusedDao.createTable();
         this.sequencesUnlockDao.createTable();
+    }
+
+    @Override
+    public synchronized Sequences generate(String key) {
+        return generate(key, type);
     }
 
     @Override
@@ -227,6 +234,7 @@ public class SequencesGenerator implements Generator {
         sequences.setMonth(StringUtils.hasLength(month) ? Integer.valueOf(month) : null);
         sequences.setDay(StringUtils.hasLength(day) ? Integer.valueOf(day) : null);
         sequences.setSeq(StringUtils.hasLength(seq) ? Long.parseLong(seq) : 0L);
+        sequences.setType(type);
 
         return sequences;
     }
@@ -239,7 +247,7 @@ public class SequencesGenerator implements Generator {
     }
 
     @Override
-    public void release() {
+    public synchronized void release() {
         //列出所有使用中表存在的序号
         List<SequencesUnlock> sequencesUnlockList = sequencesUnlockDao.listAll();
 
@@ -255,7 +263,7 @@ public class SequencesGenerator implements Generator {
     }
 
     @Override
-    public void release(Date begin, Date end) {
+    public synchronized void release(Date begin, Date end) {
         //列出指定时间段内使用中表存在的序号
         List<SequencesUnlock> sequencesUnlockList = sequencesUnlockDao.listByDate(begin, end);
 
@@ -271,7 +279,7 @@ public class SequencesGenerator implements Generator {
     }
 
     @Override
-    public void release(Sequences sequences) {
+    public synchronized void release(Sequences sequences) {
         sequencesUnlockDao.delete(new SequencesUnlock(sequences));
         sequencesUnusedDao.save(new SequencesUnused(sequences));
     }

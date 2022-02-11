@@ -8,7 +8,7 @@
 
 使用方法：
 
-+ 在项目中放置jar包的地方把seq-1.2.0.jar、seq-1.2.0-sources.jar、seq-1.2.0-pom.xml复制过去
++ 在项目中放置jar包的地方把seq-1.3.1.jar、seq-1.3.1-sources.jar、seq-1.3.1-pom.xml复制过去
 + 在pom.xml中增加以下内容，然后执行maven命令：mvn clean
 
 ```xml
@@ -18,7 +18,7 @@
         <dependency>
             <groupId>com.yanghuanglin</groupId>
             <artifactId>seq</artifactId>
-            <version>1.2.0</version>
+            <version>1.3.1</version>
             <exclusions>
                 <!-- 如若你项目中有引用spring-jdbc，则需要排除seq的jdbc依赖 -->
                 <exclusion>
@@ -33,7 +33,7 @@
             </exclusions>
         </dependency>
     </dependencies>
-    
+
     <build>
         <plugins>
             <!-- 每次执行mvn clean时，自动安装指定的jar包 -->
@@ -50,13 +50,13 @@
                         </goals>
                         <configuration>
                             <!-- ${project.basedir}表示当前项目的根目录 -->
-                            <file>${project.basedir}/lib/seq-1.2.0.jar</file>
-                            <pomFile>${pom.basedir}/lib/seq-1.2.0-pom.xml</pomFile>
-                            <sources>${project.basedir}/lib/seq-1.2.0-sources.jar</sources>
+                            <file>${project.basedir}/lib/seq-1.3.1.jar</file>
+                            <pomFile>${pom.basedir}/lib/seq-1.3.1-pom.xml</pomFile>
+                            <sources>${project.basedir}/lib/seq-1.3.1-sources.jar</sources>
                             <repositoryLayout>default</repositoryLayout>
                             <groupId>com.yanghuanglin</groupId>
                             <artifactId>seq</artifactId>
-                            <version>1.2.0</version>
+                            <version>1.3.1</version>
                             <packaging>jar</packaging>
                             <generatePom>true</generatePom>
                         </configuration>
@@ -279,7 +279,8 @@ GeneratorConfig配置项，通过set方法设置
 | transactionManager  | org.springframework.jdbc.datasource.DataSourceTransactionManager | null             | 事务管理器    |
 | autoCreate          | Boolean                                                          | true             | 开启自动建表   |
 | step                | Integer                                                          | 1                | 序号增加时的步长 |
-| tableConfig         | com.yanghuanglin.seq.config.TableConfig                                | TableConfig的默认配置 | 表配置      |
+| type                | String                                                           | DEFAULT          | 默认序号类型   |
+| tableConfig         | com.yanghuanglin.seq.config.TableConfig                          | TableConfig的默认配置 | 表配置      |
 
 以上配置中，jdbcTemplate和transactionTemplate优先级最高，如果jdbcTemplate、transactionTemplate、dataSource、transactionManager同时配置，则dataSource和transactionManager无效；
 进行这几种组合：dataSource+autoCreate+step+tableConfig，jdbcTemplate+transactionTemplate+autoCreate+step+tableConfig，jdbcTemplate+transactionManager+autoCreate+step+tableConfig
@@ -290,6 +291,7 @@ Generator方法如下：
 ```java
 package com.yanghuanglin.seq.generator;
 
+import com.yanghuanglin.seq.config.GeneratorConfig;
 import com.yanghuanglin.seq.po.Sequences;
 import com.yanghuanglin.seq.po.SequencesUnlock;
 import com.yanghuanglin.seq.po.SequencesUnused;
@@ -313,6 +315,19 @@ public interface Generator {
      * 序号格式字符中的格式化后的序号
      */
     String SEQ = "#seq#";
+
+    /**
+     * 根据传入的key和type生成可用的序号对象。
+     * <p/>
+     * 如果根据key和默认的{@link GeneratorConfig#getType()}在{@link Sequences}中找不到记录，说明该组合的序号对象还未初次生成，返回的是seq为step的序号对象，该对象数据会写入到{@link SequencesUnlock}中。
+     * <p/>
+     * 如果根据key和默认的{@link GeneratorConfig#getType()}在{@link Sequences}中找到了记录，且在{@link SequencesUnused}也找到了记录，说明该组合生成的序号有部分未使用，返回的是{@link SequencesUnused}中找到的seq最小的序号对象。同时会将{@link SequencesUnused}中找到的seq最小的记录删除，然后写入到{@link SequencesUnlock}中。
+     * <p/>
+     *
+     * @param key  数据字典中的编码
+     * @return 可用的序号对象
+     */
+    Sequences generate(String key);
 
     /**
      * 根据传入的key和type生成可用的序号对象。
@@ -386,7 +401,7 @@ public interface Generator {
     /**
      * 将已格式化的序号解析为序号对象
      * <p/>
-     * 返回的序号对象{@link Sequences#getKey()}和{@link Sequences#getType()}为null，但是临时字段{@link Sequences#getYear()}、{@link Sequences#getMonth()}、{@link Sequences#getDay()}可能有值
+     * 返回的序号对象{@link Sequences#getKey()}为null，{@link Sequences#getType()}为{@link GeneratorConfig#getType()}的默认值，但是临时字段{@link Sequences#getYear()}、{@link Sequences#getMonth()}、{@link Sequences#getDay()}可能有值
      * <p/>
      * 如果生成序号时，序号的key在年、月、日上有关联（如每年每月的序号要从1开始），则需要自行用序号字符串与{@link Sequences#getYear()}、{@link Sequences#getMonth()}、{@link Sequences#getDay()}进行组合，进而得到key
      * <p/>
@@ -396,7 +411,7 @@ public interface Generator {
      *
      * @param formatted 格式化后的序号字符串
      * @param pattern   序号格式
-     * @return 包含了序号字符串对应年（如果有）、月（如果有）、日（如果有）、序号的序号对象，其key、type需要根据情况手动设置
+     * @return 包含了序号字符串对应年（如果有）、月（如果有）、日（如果有）、序号的序号对象，其key需要根据情况手动设置，type为{@link GeneratorConfig#getType()}的默认值
      */
     Sequences parse(String formatted, String pattern);
 

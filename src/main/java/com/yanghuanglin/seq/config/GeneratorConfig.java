@@ -44,6 +44,11 @@ public class GeneratorConfig {
     private Integer step = 1;
 
     /**
+     * 默认序号类型
+     */
+    private String type="DEFAULT";
+
+    /**
      * 表和字段配置
      */
     private TableConfig tableConfig = new TableConfig();
@@ -93,6 +98,14 @@ public class GeneratorConfig {
 
     public void setAutoCreate(Boolean autoCreate) {
         this.autoCreate = autoCreate;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public Integer getStep() {
