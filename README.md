@@ -8,7 +8,7 @@
 
 使用方法：
 
-+ 在项目中放置jar包的地方把seq-1.1.0.jar、seq-1.1.0-sources.jar、seq-1.1.0-pom.xml复制过去
++ 在项目中放置jar包的地方把seq-1.2.0.jar、seq-1.2.0-sources.jar、seq-1.2.0-pom.xml复制过去
 + 在pom.xml中增加以下内容，然后执行maven命令：mvn clean
 
 ```xml
@@ -18,7 +18,7 @@
         <dependency>
             <groupId>com.yanghuanglin</groupId>
             <artifactId>seq</artifactId>
-            <version>1.0.0</version>
+            <version>1.2.0</version>
             <exclusions>
                 <!-- 如若你项目中有引用spring-jdbc，则需要排除seq的jdbc依赖 -->
                 <exclusion>
@@ -50,13 +50,13 @@
                         </goals>
                         <configuration>
                             <!-- ${project.basedir}表示当前项目的根目录 -->
-                            <file>${project.basedir}/lib/seq-1.1.0.jar</file>
-                            <pomFile>${pom.basedir}/lib/seq-1.1.0-pom.xml</pomFile>
-                            <sources>${project.basedir}/lib/seq-1.1.0-sources.jar</sources>
+                            <file>${project.basedir}/lib/seq-1.2.0.jar</file>
+                            <pomFile>${pom.basedir}/lib/seq-1.2.0-pom.xml</pomFile>
+                            <sources>${project.basedir}/lib/seq-1.2.0-sources.jar</sources>
                             <repositoryLayout>default</repositoryLayout>
                             <groupId>com.yanghuanglin</groupId>
                             <artifactId>seq</artifactId>
-                            <version>1.0.0</version>
+                            <version>1.2.0</version>
                             <packaging>jar</packaging>
                             <generatePom>true</generatePom>
                         </configuration>
@@ -341,6 +341,16 @@ public interface Generator {
     String generate(String key, String type, Integer minLength);
 
     /**
+     * 将{@link #generate(String, String)}得到的序号对象格式化为补零后的序号字符串。实际上只会用到{@link Sequences#getSeq()}属性
+     *
+     * @param sequences 生成的序号对象
+     * @param minLength 序号数字最小长度
+     * @param pattern   格式
+     * @return 格式化后的字符串
+     */
+    String format(Sequences sequences, Integer minLength, String pattern);
+
+    /**
      * 将生成的序号对象格式化为指定格式
      * <p/>
      * pattern支持：{@link #YEAR}(当前年份)、{@link #MONTH}(当前月份)、{@link #DAY}(当前日期)、{@link #SEQ}(生成的字符串序号)四个变量
@@ -352,7 +362,7 @@ public interface Generator {
      * @param seq       需要格式化的序号
      * @param minLength 序号最小长度，不足的会补零
      * @param pattern   格式
-     * @return 格式化后的字符串
+     * @return 格式化后的序号字符串
      */
     String format(Long seq, Integer minLength, String pattern);
 
@@ -368,10 +378,27 @@ public interface Generator {
      * @param seq       需要格式化的序号
      * @param start     序号格式化后以什么字符串开头
      * @param minLength 序号最小长度，不足的会补零
-     * @param pattern   格式
-     * @return 格式化后的字符串
+     * @param pattern   序号格式
+     * @return 格式化后的序号字符串
      */
     String format(Long seq, String start, Integer minLength, String pattern);
+
+    /**
+     * 将已格式化的序号解析为序号对象
+     * <p/>
+     * 返回的序号对象{@link Sequences#getKey()}和{@link Sequences#getType()}为null，但是临时字段{@link Sequences#getYear()}、{@link Sequences#getMonth()}、{@link Sequences#getDay()}可能有值
+     * <p/>
+     * 如果生成序号时，序号的key在年、月、日上有关联（如每年每月的序号要从1开始），则需要自行用序号字符串与{@link Sequences#getYear()}、{@link Sequences#getMonth()}、{@link Sequences#getDay()}进行组合，进而得到key
+     * <p/>
+     * 例如：SNT序号每年都从1开始，则key应该是类似SNT2021、SNT2022这种格式，而在配置中，该序号的代码只是SNT，但是由于每年都要从1开始，所有应该每年有一个key，这个key就为SNT+年份，而这个年份就是此处解析后返回的对象中的{@link Sequences#getYear()}
+     * <p/>
+     * 注意：序号格式和格式化后的字符串占位一定要匹配。如：处〔#year#〕#month#10801第#seq#号 对应 处〔2022〕0210801第10001号，而不能对应 处〔2022〕021110801第10001号
+     *
+     * @param pattern   序号格式
+     * @param formatted 格式化后的序号字符串
+     * @return 包含了序号字符串对应年（如果有）、月（如果有）、日（如果有）、序号的序号对象，其key、type需要根据情况手动设置
+     */
+    Sequences parse(String pattern, String formatted);
 
     /**
      * 锁定指定序号，在序号生成后，调用该序号的逻辑完成后需要执行此方法
@@ -401,6 +428,13 @@ public interface Generator {
      * @param end   结束时间
      */
     void release(Date begin, Date end);
+
+    /**
+     * 释放指定序号。一般用于业务对象删除后，对应序号需要回收使用时。
+     *
+     * @param sequences 需要释放的序号。一般是一个通过{@link Sequences#setKey(String)}、{@link Sequences#setType(String)}、{@link Sequences#setSeq(Long)}三方法一起手动构建或通过{@link Sequences#Sequences(String, String, Long)}构造方法构建的实例对象
+     */
+    void release(Sequences sequences);
 }
 
 ```

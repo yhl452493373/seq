@@ -15,12 +15,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.support.JdbcTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.StringUtils;
 
 import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SequencesGenerator implements Generator {
     private final TransactionTemplate transactionTemplate;
@@ -153,6 +156,80 @@ public class SequencesGenerator implements Generator {
         pattern = pattern.replaceAll(Generator.DAY, String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
         pattern = pattern.replaceAll(Generator.SEQ, seqString);
         return pattern;
+    }
+
+    @Override
+    public Sequences parse(String formatted, String pattern) {
+        //年、月、日、序号分隔特殊符号正则规则
+        String splitRegString = "(" + YEAR + "|" + MONTH + "|" + DAY + "|" + SEQ + ")";
+        //根据年、月、日、序号的特殊符号，对格式进行分隔，得到排除特殊符号后的字符串数组
+        String[] split = pattern.split(splitRegString);
+
+        for (String splitString : split) {
+            //用排除特殊符号后的字符串依次替换序号格式字符串和格式化后的序号字符串，得到纯净的序号字符串和序号格式对应关系
+            pattern = pattern.replace(splitString, "");
+            formatted = formatted.replace(splitString, "");
+        }
+
+        //年、月、日的数字匹配正则规则
+        String yearRegStr = "\\d{4}";
+        String monthRegStr = "\\d{2}";
+        String dayRegStr = "\\d{2}";
+
+        //将序号格式分隔特殊符号字符串转为正则匹配规则
+        Pattern seqPattern = Pattern.compile(splitRegString);
+        //对序号格式进行匹配
+        Matcher matcher = seqPattern.matcher(pattern);
+
+        //将年、月、日匹配规则字符串转为正则匹配规则
+        Pattern yearPattern = Pattern.compile(yearRegStr);
+        Pattern monthPattern = Pattern.compile(monthRegStr);
+        Pattern dayPattern = Pattern.compile(dayRegStr);
+
+        //默认的年、月、日均为空字符串
+        String year = "", month = "", day = "", seq = "";
+        //根据序号匹配规则字符串查找字符串分组
+        while (matcher.find()) {
+            String group = matcher.group();
+            switch (group) {
+                case Generator.YEAR:
+                    //若分组为年份分组，则将年份正则匹配到的字符串赋值给year，同时把格式化后的序号字符串中，对应年的字符串替换为空字符串
+                    Matcher yearMatcher = yearPattern.matcher(formatted);
+                    if (yearMatcher.find()) {
+                        year = yearMatcher.group();
+                    }
+                    formatted = formatted.replaceFirst(yearRegStr, "");
+                    break;
+                case Generator.MONTH:
+                    //若分组为月份分组，则将月份正则匹配到的字符串赋值给month，同时把格式化后的序号字符串中，对应月的字符串替换为空字符串
+                    Matcher monthMatcher = monthPattern.matcher(formatted);
+                    if (monthMatcher.find()) {
+                        month = monthMatcher.group();
+                    }
+                    formatted = formatted.replaceFirst(monthRegStr, "");
+                    break;
+                case Generator.DAY:
+                    //若分组为日期分组，则将日期正则匹配到的字符串赋值给day，同时把格式化后的序号字符串中，对应日期的字符串替换为空字符串
+                    Matcher dayMatcher = dayPattern.matcher(formatted);
+                    if (dayMatcher.find()) {
+                        day = dayMatcher.group();
+                    }
+                    formatted = formatted.replaceFirst(dayRegStr, "");
+                    break;
+            }
+        }
+        //经过以上替换后，最后剩下的为序号，这个序号可能是补零了的，需要调用Long.parseLong来去零
+        seq = formatted;
+
+        //构建一个新的序号对象
+        Sequences sequences = new Sequences();
+        //用获取到的年、月、日、序号给新构建的序号对象设置对应的值
+        sequences.setYear(StringUtils.hasLength(year) ? Integer.valueOf(year) : null);
+        sequences.setMonth(StringUtils.hasLength(month) ? Integer.valueOf(month) : null);
+        sequences.setDay(StringUtils.hasLength(day) ? Integer.valueOf(day) : null);
+        sequences.setSeq(StringUtils.hasLength(seq) ? Long.parseLong(seq) : 0L);
+
+        return sequences;
     }
 
     @Override

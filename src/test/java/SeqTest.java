@@ -1,9 +1,9 @@
+import com.mysql.cj.jdbc.MysqlDataSource;
 import com.yanghuanglin.seq.config.GeneratorConfig;
 import com.yanghuanglin.seq.config.TableConfig;
-import com.yanghuanglin.seq.po.Sequences;
 import com.yanghuanglin.seq.generator.Generator;
 import com.yanghuanglin.seq.generator.impl.SequencesGenerator;
-import com.mysql.cj.jdbc.MysqlDataSource;
+import com.yanghuanglin.seq.po.Sequences;
 import org.junit.Test;
 
 import java.util.HashSet;
@@ -72,5 +72,19 @@ public class SeqTest {
     public void formatTest() {
         String s = "select * from sequences where `%s`=? and `%s`=?";
         System.out.println(String.format(s, "key", "value"));
+    }
+
+    @Test
+    public void parseTest() {
+        String seqPattern = "ZZF#year##month##seq#";
+        String formatted = "ZZF20220200008";
+
+        Sequences sequences = generator.parse(formatted, seqPattern);
+
+        String key = "zzfCode" + sequences.getYear();
+
+        sequences.setKey(key);
+        sequences.setType("MISSION");
+        System.out.println(sequences);
     }
 }

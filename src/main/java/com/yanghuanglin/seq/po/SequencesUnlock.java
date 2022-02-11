@@ -34,4 +34,14 @@ public class SequencesUnlock extends Sequences {
     public void setCreateTime(Date createTime) {
         this.createTime = createTime;
     }
+
+    @Override
+    public String toString() {
+        return "SequencesUnlock{" +
+                "key='" + key + '\'' +
+                ", type='" + type + '\'' +
+                ", seq=" + seq +
+                ", createTime=" + createTime +
+                '}';
+    }
 }

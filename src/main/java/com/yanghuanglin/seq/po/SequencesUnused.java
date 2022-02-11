@@ -16,4 +16,13 @@ public class SequencesUnused extends Sequences {
         this.type = sequences.getType();
         this.seq = sequences.getSeq();
     }
+
+    @Override
+    public String toString() {
+        return "SequencesUnused{" +
+                "key='" + key + '\'' +
+                ", type='" + type + '\'' +
+                ", seq=" + seq +
+                '}';
+    }
 }

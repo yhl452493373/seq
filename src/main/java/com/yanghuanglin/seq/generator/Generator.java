@@ -72,7 +72,7 @@ public interface Generator {
      * @param seq       需要格式化的序号
      * @param minLength 序号最小长度，不足的会补零
      * @param pattern   格式
-     * @return 格式化后的字符串
+     * @return 格式化后的序号字符串
      */
     String format(Long seq, Integer minLength, String pattern);
 
@@ -88,10 +88,27 @@ public interface Generator {
      * @param seq       需要格式化的序号
      * @param start     序号格式化后以什么字符串开头
      * @param minLength 序号最小长度，不足的会补零
-     * @param pattern   格式
-     * @return 格式化后的字符串
+     * @param pattern   序号格式
+     * @return 格式化后的序号字符串
      */
     String format(Long seq, String start, Integer minLength, String pattern);
+
+    /**
+     * 将已格式化的序号解析为序号对象
+     * <p/>
+     * 返回的序号对象{@link Sequences#getKey()}和{@link Sequences#getType()}为null，但是临时字段{@link Sequences#getYear()}、{@link Sequences#getMonth()}、{@link Sequences#getDay()}可能有值
+     * <p/>
+     * 如果生成序号时，序号的key在年、月、日上有关联（如每年每月的序号要从1开始），则需要自行用序号字符串与{@link Sequences#getYear()}、{@link Sequences#getMonth()}、{@link Sequences#getDay()}进行组合，进而得到key
+     * <p/>
+     * 例如：SNT序号每年都从1开始，则key应该是类似SNT2021、SNT2022这种格式，而在配置中，该序号的代码只是SNT，但是由于每年都要从1开始，所有应该每年有一个key，这个key就为SNT+年份，而这个年份就是此处解析后返回的对象中的{@link Sequences#getYear()}
+     * <p/>
+     * 注意：序号格式和格式化后的字符串占位一定要匹配。如：处〔#year#〕#month#10801第#seq#号 对应 处〔2022〕0210801第10001号，而不能对应 处〔2022〕021110801第10001号
+     *
+     * @param formatted 格式化后的序号字符串
+     * @param pattern   序号格式
+     * @return 包含了序号字符串对应年（如果有）、月（如果有）、日（如果有）、序号的序号对象，其key、type需要根据情况手动设置
+     */
+    Sequences parse(String formatted, String pattern);
 
     /**
      * 锁定指定序号，在序号生成后，调用该序号的逻辑完成后需要执行此方法

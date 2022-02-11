@@ -23,6 +23,24 @@ public class Sequences {
      */
     protected Long seq = 0L;
 
+    /**
+     * 临时字段，序号对应的年份（如2022年）（如果能获取到的话）。
+     * 该字段仅用于解析序号字符串时，解析出对应年份，用于合成key（如：序号对应的key为SNT+年份，返回的为其年份）
+     */
+    private transient Integer year;
+
+    /**
+     * 临时字段，序号对应的月份（如2月）（如果能获取到的话）。
+     * 该字段仅用于解析序号字符串时，解析出对应月份，用于合成key（如：序号对应的key为SNT+年份+月份，返回的为其月份）
+     */
+    private transient Integer month;
+
+    /**
+     * 临时字段，序号对应的日期（如1日）（如果能获取到的话）。
+     * 该字段仅用于解析序号字符串时，解析出对应日期，用于合成key（如：序号对应的key为SNT+年份+月份+日期，返回的为其日期）
+     */
+    private transient Integer day;
+
     public Sequences() {
     }
 
@@ -71,6 +89,30 @@ public class Sequences {
         this.seq = seq;
     }
 
+    public Integer getYear() {
+        return year;
+    }
+
+    public void setYear(Integer year) {
+        this.year = year;
+    }
+
+    public Integer getMonth() {
+        return month;
+    }
+
+    public void setMonth(Integer month) {
+        this.month = month;
+    }
+
+    public Integer getDay() {
+        return day;
+    }
+
+    public void setDay(Integer day) {
+        this.day = day;
+    }
+
     /**
      * 将序号增加指定步长
      *
@@ -90,5 +132,17 @@ public class Sequences {
         if (minLength != null)
             return String.format("%0" + minLength + "d", this.seq);
         return String.valueOf(this.seq);
+    }
+
+    @Override
+    public String toString() {
+        return "Sequences{" +
+                "key='" + key + '\'' +
+                ", type='" + type + '\'' +
+                ", seq=" + seq +
+                ", year=" + year +
+                ", month=" + month +
+                ", day=" + day +
+                '}';
     }
 }
