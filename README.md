@@ -394,11 +394,11 @@ public interface Generator {
      * <p/>
      * 注意：序号格式和格式化后的字符串占位一定要匹配。如：处〔#year#〕#month#10801第#seq#号 对应 处〔2022〕0210801第10001号，而不能对应 处〔2022〕021110801第10001号
      *
-     * @param pattern   序号格式
      * @param formatted 格式化后的序号字符串
+     * @param pattern   序号格式
      * @return 包含了序号字符串对应年（如果有）、月（如果有）、日（如果有）、序号的序号对象，其key、type需要根据情况手动设置
      */
-    Sequences parse(String pattern, String formatted);
+    Sequences parse(String formatted, String pattern);
 
     /**
      * 锁定指定序号，在序号生成后，调用该序号的逻辑完成后需要执行此方法
