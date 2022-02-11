@@ -13,7 +13,6 @@ import com.yanghuanglin.seq.po.SequencesUnlock;
 import com.yanghuanglin.seq.po.SequencesUnused;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.jdbc.support.JdbcTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
@@ -54,7 +53,7 @@ public class SequencesGenerator implements Generator {
                 DataSource dataSource = jdbcTemplate.getDataSource();
                 if (dataSource == null)
                     throw new NullPointerException("数据源不能为空");
-                transactionManager = new JdbcTransactionManager(dataSource);
+                transactionManager = new DataSourceTransactionManager(dataSource);
             }
             //通过事务管理器创建事务操作模板
             transactionTemplate = new TransactionTemplate(transactionManager);
