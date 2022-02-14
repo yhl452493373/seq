@@ -1,28 +1,26 @@
 package com.yanghuanglin.seq.generator.impl;
 
+import com.yanghuanglin.seq.config.BaseConfig;
 import com.yanghuanglin.seq.config.GeneratorConfig;
 import com.yanghuanglin.seq.dao.SequencesDao;
 import com.yanghuanglin.seq.dao.SequencesUnlockDao;
 import com.yanghuanglin.seq.dao.SequencesUnusedDao;
-import com.yanghuanglin.seq.dao.impl.SequencesDaoImpl;
-import com.yanghuanglin.seq.dao.impl.SequencesUnlockDaoImpl;
-import com.yanghuanglin.seq.dao.impl.SequencesUnusedDaoImpl;
+import com.yanghuanglin.seq.enums.FormatPlaceholder;
 import com.yanghuanglin.seq.generator.Generator;
 import com.yanghuanglin.seq.po.Sequences;
 import com.yanghuanglin.seq.po.SequencesUnlock;
 import com.yanghuanglin.seq.po.SequencesUnused;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StringUtils;
 
-import javax.sql.DataSource;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.yanghuanglin.seq.enums.FormatPlaceholder.*;
 
 public class SequencesGenerator implements Generator {
     private final TransactionTemplate transactionTemplate;
@@ -31,57 +29,35 @@ public class SequencesGenerator implements Generator {
     private final SequencesUnlockDao sequencesUnlockDao;
     private final Integer step;
     private final String type;
+    private final Integer minLength;
 
     public SequencesGenerator(GeneratorConfig generatorConfig) {
-        //数据库操作模板
-        JdbcTemplate jdbcTemplate = generatorConfig.getJdbcTemplate();
+        BaseConfig baseConfig = BaseConfig.getInstance(generatorConfig);
 
-        if (jdbcTemplate == null) {
-            //数据源
-            DataSource dataSource = generatorConfig.getDataSource();
-            if (dataSource == null)
-                //若数据库操作模板为空，也没有配置数据源，则抛出异常
-                throw new NullPointerException("数据源不能为空");
-            //否则以数据源创建数据库操作模板
-            jdbcTemplate = new JdbcTemplate(dataSource);
-        }
+        this.transactionTemplate = baseConfig.getTransactionTemplate();
+        this.sequencesDao = baseConfig.getSequencesDao();
+        this.sequencesUnusedDao = baseConfig.getSequencesUnusedDao();
+        this.sequencesUnlockDao = baseConfig.getSequencesUnlockDao();
+        this.step = baseConfig.getStep();
+        this.type = baseConfig.getType();
+        this.minLength = baseConfig.getMinLength();
 
-        if (generatorConfig.getTransactionTemplate() == null) {
-            //若没有配置事务操作模板，则从配置中取事务管理器
-            DataSourceTransactionManager transactionManager = generatorConfig.getTransactionManager();
-            if (transactionManager == null) {
-                //若未配置事务管理器，则通过数据源新建
-                DataSource dataSource = jdbcTemplate.getDataSource();
-                if (dataSource == null)
-                    throw new NullPointerException("数据源不能为空");
-                transactionManager = new DataSourceTransactionManager(dataSource);
-            }
-            //通过事务管理器创建事务操作模板
-            transactionTemplate = new TransactionTemplate(transactionManager);
-        } else {
-            //获取事务操作模板
-            transactionTemplate = generatorConfig.getTransactionTemplate();
-        }
-
-        this.sequencesDao = new SequencesDaoImpl(jdbcTemplate, generatorConfig.getTableConfig());
-        this.sequencesUnusedDao = new SequencesUnusedDaoImpl(jdbcTemplate, generatorConfig.getTableConfig());
-        this.sequencesUnlockDao = new SequencesUnlockDaoImpl(jdbcTemplate, generatorConfig.getTableConfig());
-        this.step = generatorConfig.getStep();
-        this.type = generatorConfig.getType();
-
-        autoCreateTable(generatorConfig.getAutoCreate());
+        createTable(generatorConfig.getAutoCreate());
     }
 
     /**
-     * 自动创建需要的表
+     * 创建需要的表
+     *
+     * @param autoCreate 是否自动创建
      */
-    private void autoCreateTable(Boolean autoCreate) {
+    private void createTable(Boolean autoCreate) {
         if (!autoCreate)
             return;
         this.sequencesDao.createTable();
         this.sequencesUnusedDao.createTable();
         this.sequencesUnlockDao.createTable();
     }
+
 
     @Override
     public synchronized Sequences generate(String key) {
@@ -142,8 +118,18 @@ public class SequencesGenerator implements Generator {
     }
 
     @Override
+    public String format(Sequences sequences, String pattern) {
+        return format(sequences, minLength, pattern);
+    }
+
+    @Override
     public String format(Sequences sequences, Integer minLength, String pattern) {
         return format(sequences.getSeq(), minLength, pattern);
+    }
+
+    @Override
+    public String format(Long seq, String pattern) {
+        return format(seq, minLength, pattern);
     }
 
     @Override
@@ -152,22 +138,27 @@ public class SequencesGenerator implements Generator {
     }
 
     @Override
+    public String format(Long seq, String start, String pattern) {
+        return format(seq, start, minLength, pattern);
+    }
+
+    @Override
     public String format(Long seq, String start, Integer minLength, String pattern) {
         if (start == null)
             start = "";
         String seqString = start + new Sequences(seq).format(minLength);
         Calendar calendar = Calendar.getInstance();
-        pattern = pattern.replaceAll(Generator.YEAR, String.valueOf(calendar.get(Calendar.YEAR)));
-        pattern = pattern.replaceAll(Generator.MONTH, String.format("%02d", calendar.get(Calendar.MONTH) + 1));
-        pattern = pattern.replaceAll(Generator.DAY, String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
-        pattern = pattern.replaceAll(Generator.SEQ, seqString);
+        pattern = pattern.replaceAll(YEAR.getPlaceholder(), String.valueOf(calendar.get(Calendar.YEAR)));
+        pattern = pattern.replaceAll(MONTH.getPlaceholder(), String.format("%02d", calendar.get(Calendar.MONTH) + 1));
+        pattern = pattern.replaceAll(DAY.getPlaceholder(), String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
+        pattern = pattern.replaceAll(SEQ.getPlaceholder(), seqString);
         return pattern;
     }
 
     @Override
     public Sequences parse(String formatted, String pattern) {
         //年、月、日、序号分隔特殊符号正则规则
-        String splitRegString = "(" + YEAR + "|" + MONTH + "|" + DAY + "|" + SEQ + ")";
+        String splitRegString = "(" + YEAR.getPlaceholder() + "|" + MONTH.getPlaceholder() + "|" + DAY.getPlaceholder() + "|" + SEQ.getPlaceholder() + ")";
         //根据年、月、日、序号的特殊符号，对格式进行分隔，得到排除特殊符号后的字符串数组
         String[] split = pattern.split(splitRegString);
 
@@ -197,8 +188,11 @@ public class SequencesGenerator implements Generator {
         //根据序号匹配规则字符串查找字符串分组
         while (matcher.find()) {
             String group = matcher.group();
-            switch (group) {
-                case Generator.YEAR:
+            FormatPlaceholder formatPlaceholder = of(group);
+            if (formatPlaceholder == null)
+                continue;
+            switch (formatPlaceholder) {
+                case YEAR:
                     //若分组为年份分组，则将年份正则匹配到的字符串赋值给year，同时把格式化后的序号字符串中，对应年的字符串替换为空字符串
                     Matcher yearMatcher = yearPattern.matcher(formatted);
                     if (yearMatcher.find()) {
@@ -206,7 +200,7 @@ public class SequencesGenerator implements Generator {
                     }
                     formatted = formatted.replaceFirst(yearRegStr, "");
                     break;
-                case Generator.MONTH:
+                case MONTH:
                     //若分组为月份分组，则将月份正则匹配到的字符串赋值给month，同时把格式化后的序号字符串中，对应月的字符串替换为空字符串
                     Matcher monthMatcher = monthPattern.matcher(formatted);
                     if (monthMatcher.find()) {
@@ -214,7 +208,7 @@ public class SequencesGenerator implements Generator {
                     }
                     formatted = formatted.replaceFirst(monthRegStr, "");
                     break;
-                case Generator.DAY:
+                case DAY:
                     //若分组为日期分组，则将日期正则匹配到的字符串赋值给day，同时把格式化后的序号字符串中，对应日期的字符串替换为空字符串
                     Matcher dayMatcher = dayPattern.matcher(formatted);
                     if (dayMatcher.find()) {
@@ -241,6 +235,8 @@ public class SequencesGenerator implements Generator {
 
     @Override
     public synchronized boolean lock(Sequences sequences) {
+        if (sequences == null)
+            return true;
         SequencesUnlock condition = new SequencesUnlock(sequences);
         //将使用中表的对应数据删除，空闲表中数据在生成时会删除，因此这里不需要处理该表
         return sequencesUnlockDao.delete(condition);
@@ -280,6 +276,8 @@ public class SequencesGenerator implements Generator {
 
     @Override
     public synchronized void release(Sequences sequences) {
+        if (sequences == null)
+            return;
         sequencesUnlockDao.delete(new SequencesUnlock(sequences));
         sequencesUnusedDao.save(new SequencesUnused(sequences));
     }

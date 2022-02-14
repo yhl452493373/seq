@@ -1,5 +1,6 @@
 package com.yanghuanglin.seq.po;
 
+import com.yanghuanglin.seq.config.BaseConfig;
 
 /**
  * 当前序号
@@ -125,7 +126,19 @@ public class Sequences {
     /**
      * 序号补零
      *
-     * @param minLength 最小长度，低于此长度，会填充零
+     * @return 补零后的序号，若未单独设置序号的长度，则最小长度为{@link BaseConfig#getMinLength()}长度；否则为修改后的长度，不足部分补零
+     */
+    public String format() {
+        BaseConfig baseConfig = BaseConfig.getInstance();
+        if (baseConfig.getMinLength() != null)
+            return String.format("%0" + baseConfig.getMinLength() + "d", this.seq);
+        return String.valueOf(this.seq);
+    }
+
+    /**
+     * 序号补零
+     *
+     * @param minLength 最小长度，低于此长度，会补零
      * @return 补零后的序号
      */
     public String format(Integer minLength) {

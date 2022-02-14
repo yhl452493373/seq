@@ -27,10 +27,10 @@ public class SeqTest {
 
         GeneratorConfig generatorConfig = new GeneratorConfig(dataSource);
         TableConfig tableConfig = new TableConfig();
-//        tableConfig.setTable("sequences");
-//        tableConfig.setKeyColumn("SEQUENCE_KEY");
-//        tableConfig.setTypeColumn("SEQUENCE_TYPE");
-//        tableConfig.setSeqColumn("SEQUENCE_NEXT_ID");
+        tableConfig.setTable("sequences");
+        tableConfig.setKeyColumn("SEQUENCE_KEY");
+        tableConfig.setTypeColumn("SEQUENCE_TYPE");
+        tableConfig.setSeqColumn("NEXT_ID");
         generatorConfig.setTableConfig(tableConfig);
 
         generator = new SequencesGenerator(generatorConfig);
@@ -47,7 +47,7 @@ public class SeqTest {
             int finalI = i;
             threadPoolExecutor.execute(() -> {
                 Sequences sequences = generator.generate("SNT", "MISSION");
-                String formattedSeq = generator.format(sequences.getSeq(), 5, "处〔#year#〕10801#seq#");
+                String formattedSeq = generator.format(sequences.getSeq(), "处〔#year#〕10801#seq#");
 //                if (finalI % 2 == 0)
 //                    System.out.println(3 / 0);
                 generator.lock(sequences);

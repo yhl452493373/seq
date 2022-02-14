@@ -44,6 +44,11 @@ public class GeneratorConfig {
     private Integer step = 1;
 
     /**
+     * 格式化后序号字符串的最小长度，不足的部分补零
+     */
+    private Integer minLength = 1;
+
+    /**
      * 默认序号类型
      */
     private String type="DEFAULT";
@@ -98,6 +103,14 @@ public class GeneratorConfig {
 
     public void setAutoCreate(Boolean autoCreate) {
         this.autoCreate = autoCreate;
+    }
+
+    public Integer getMinLength() {
+        return minLength;
+    }
+
+    public void setMinLength(Integer minLength) {
+        this.minLength = minLength;
     }
 
     public String getType() {

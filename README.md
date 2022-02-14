@@ -8,7 +8,7 @@
 
 使用方法：
 
-+ 在项目中放置jar包的地方把seq-1.3.1.jar、seq-1.3.1-sources.jar、seq-1.3.1-pom.xml复制过去
++ 在项目中放置jar包的地方把seq-1.4.1.jar、seq-1.4.1-sources.jar、seq-1.4.1-pom.xml复制过去
 + 在pom.xml中增加以下内容，然后执行maven命令：mvn clean
 
 ```xml
@@ -18,7 +18,7 @@
         <dependency>
             <groupId>com.yanghuanglin</groupId>
             <artifactId>seq</artifactId>
-            <version>1.3.1</version>
+            <version>1.4.1</version>
             <exclusions>
                 <!-- 如若你项目中有引用spring-jdbc，则需要排除seq的jdbc依赖 -->
                 <exclusion>
@@ -50,13 +50,13 @@
                         </goals>
                         <configuration>
                             <!-- ${project.basedir}表示当前项目的根目录 -->
-                            <file>${project.basedir}/lib/seq-1.3.1.jar</file>
-                            <pomFile>${pom.basedir}/lib/seq-1.3.1-pom.xml</pomFile>
-                            <sources>${project.basedir}/lib/seq-1.3.1-sources.jar</sources>
+                            <file>${project.basedir}/lib/seq-1.4.1.jar</file>
+                            <pomFile>${pom.basedir}/lib/seq-1.4.1-pom.xml</pomFile>
+                            <sources>${project.basedir}/lib/seq-1.4.1-sources.jar</sources>
                             <repositoryLayout>default</repositoryLayout>
                             <groupId>com.yanghuanglin</groupId>
                             <artifactId>seq</artifactId>
-                            <version>1.3.1</version>
+                            <version>1.4.1</version>
                             <packaging>jar</packaging>
                             <generatePom>true</generatePom>
                         </configuration>
@@ -71,10 +71,10 @@
 + springboot中配置方式一（优先）：直接注入已有jdbcTemplate和transactionTemplate
 
 ```java
-package com.yanghuanglin.springseq.config;
+package com.yanghuanglin.springseq.baseConfig;
 
-import com.yanghuanglin.seq.config.GeneratorConfig;
-import com.yanghuanglin.seq.config.TableConfig;
+import com.yanghuanglin.seq.baseConfig.GeneratorConfig;
+import com.yanghuanglin.seq.baseConfig.TableConfig;
 import com.yanghuanglin.seq.generator.Generator;
 import com.yanghuanglin.seq.generator.impl.SequencesGenerator;
 import org.springframework.context.annotation.Bean;
@@ -107,11 +107,11 @@ public class SeqGeneratorConfig {
     public TableConfig tableConfig() {
         TableConfig tableConfig = new TableConfig();
         //自定义表名、字段名
-        //tableConfig.setTable("sequences");
-        //tableConfig.setKeyColumn("SEQUENCE_KEY");
-        //tableConfig.setTypeColumn("SEQUENCE_TYPE");
-        //tableConfig.setSeqColumn("SEQUENCE_NEXT_ID");
-        //tableConfig.setCreateTimeColumn("CREATE_TIME");
+        tableConfig.setTable("sequences");
+        tableConfig.setKeyColumn("SEQUENCE_KEY");
+        tableConfig.setTypeColumn("SEQUENCE_TYPE");
+        tableConfig.setSeqColumn("NEXT_ID");
+        tableConfig.setCreateTimeColumn("CREATE_TIME");
         return tableConfig;
     }
 
@@ -142,10 +142,10 @@ public class SeqGeneratorConfig {
 + springboot中配置方式二：注入已有的dataSource或自行构建dataSource，通过dataSource自动生成jdbcTemplate和transactionTemplate
 
 ```java
-package com.yanghuanglin.springseq.config;
+package com.yanghuanglin.springseq.baseConfig;
 
-import com.yanghuanglin.seq.config.GeneratorConfig;
-import com.yanghuanglin.seq.config.TableConfig;
+import com.yanghuanglin.seq.baseConfig.GeneratorConfig;
+import com.yanghuanglin.seq.baseConfig.TableConfig;
 import com.yanghuanglin.seq.generator.Generator;
 import com.yanghuanglin.seq.generator.impl.SequencesGenerator;
 import org.springframework.context.annotation.Bean;
@@ -172,11 +172,11 @@ public class SeqGeneratorConfig {
     public TableConfig tableConfig() {
         TableConfig tableConfig = new TableConfig();
         //自定义表名、字段名
-        //tableConfig.setTable("sequences");
-        //tableConfig.setKeyColumn("SEQUENCE_KEY");
-        //tableConfig.setTypeColumn("SEQUENCE_TYPE");
-        //tableConfig.setSeqColumn("SEQUENCE_NEXT_ID");
-        //tableConfig.setCreateTimeColumn("CREATE_TIME");
+        tableConfig.setTable("sequences");
+        tableConfig.setKeyColumn("SEQUENCE_KEY");
+        tableConfig.setTypeColumn("SEQUENCE_TYPE");
+        tableConfig.setSeqColumn("NEXT_ID");
+        tableConfig.setCreateTimeColumn("CREATE_TIME");
         return tableConfig;
     }
 
@@ -184,6 +184,7 @@ public class SeqGeneratorConfig {
      * 序号生成器配置类
      * @param tableConfig 序号表配置类
      */
+    @DependsOn("tableConfig")
     @Bean
     public GeneratorConfig generatorConfig(TableConfig tableConfig) {
         GeneratorConfig generatorConfig = new GeneratorConfig();
@@ -195,6 +196,7 @@ public class SeqGeneratorConfig {
      * 注册序号生成器类
      * @param generatorConfig 序号生成器配置类
      */
+    @DependsOn("generatorConfig")
     @Bean
     public Generator generator(GeneratorConfig generatorConfig) {
         return new SequencesGenerator(generatorConfig);
@@ -205,7 +207,7 @@ public class SeqGeneratorConfig {
 + 使用：
 
 ```java
-package com.yanghuanglin.springseq.config;
+package com.yanghuanglin.springseq.baseConfig;
 
 import com.yanghuanglin.seq.generator.Generator;
 import com.yanghuanglin.seq.po.Sequences;
@@ -271,19 +273,20 @@ TableConfig配置项，通过set方法设置（一般不用改，如果已有相
 
 GeneratorConfig配置项，通过set方法设置
 
-| 配置项                 | 类型                                                               | 默认值              | 说明       |
-|---------------------|------------------------------------------------------------------|------------------|----------|
-| dataSource          | javax.sql.DataSource                                             | null             | 数据源      |
-| jdbcTemplate        | org.springframework.jdbc.core.JdbcTemplate                       | null             | 数据库操作模板  |
-| transactionTemplate | org.springframework.jdbc.core.JdbcTemplate                       | null             | 事务操作模板   |
-| transactionManager  | org.springframework.jdbc.datasource.DataSourceTransactionManager | null             | 事务管理器    |
-| autoCreate          | Boolean                                                          | true             | 开启自动建表   |
-| step                | Integer                                                          | 1                | 序号增加时的步长 |
-| type                | String                                                           | DEFAULT          | 默认序号类型   |
-| tableConfig         | com.yanghuanglin.seq.config.TableConfig                          | TableConfig的默认配置 | 表配置      |
+| 配置项                 | 类型                                                               | 默认值              | 说明               |
+|---------------------|------------------------------------------------------------------|------------------|------------------|
+| dataSource          | javax.sql.DataSource                                             | null             | 数据源              |
+| jdbcTemplate        | org.springframework.jdbc.core.JdbcTemplate                       | null             | 数据库操作模板          |
+| transactionTemplate | org.springframework.jdbc.core.JdbcTemplate                       | null             | 事务操作模板           |
+| transactionManager  | org.springframework.jdbc.datasource.DataSourceTransactionManager | null             | 事务管理器            |
+| autoCreate          | Boolean                                                          | true             | 开启自动建表           |
+| step                | Integer                                                          | 1                | 序号增加时的步长         |
+| type                | String                                                           | DEFAULT          | 默认序号类型           |
+| minLength           | Integer                                                          | 1                | 默认序号格式化后长度，不足的补零 |
+| tableConfig         | com.yanghuanglin.seq.baseConfig.TableConfig                      | TableConfig的默认配置 | 表配置              |
 
 以上配置中，jdbcTemplate和transactionTemplate优先级最高，如果jdbcTemplate、transactionTemplate、dataSource、transactionManager同时配置，则dataSource和transactionManager无效；
-进行这几种组合：dataSource+autoCreate+step+tableConfig，jdbcTemplate+transactionTemplate+autoCreate+step+tableConfig，jdbcTemplate+transactionManager+autoCreate+step+tableConfig
+可进行这几种组合：dataSource+autoCreate+step+minLength+tableConfig，jdbcTemplate+transactionTemplate+autoCreate+step+minLength+tableConfig，jdbcTemplate+transactionManager+autoCreate+step+minLength+tableConfig
 
 ---
 Generator方法如下：
@@ -291,7 +294,9 @@ Generator方法如下：
 ```java
 package com.yanghuanglin.seq.generator;
 
+import com.yanghuanglin.seq.config.BaseConfig;
 import com.yanghuanglin.seq.config.GeneratorConfig;
+import com.yanghuanglin.seq.enums.FormatPlaceholder;
 import com.yanghuanglin.seq.po.Sequences;
 import com.yanghuanglin.seq.po.SequencesUnlock;
 import com.yanghuanglin.seq.po.SequencesUnused;
@@ -300,23 +305,6 @@ import java.util.Date;
 
 public interface Generator {
     /**
-     * 序号格式字符中的年
-     */
-    String YEAR = "#year#";
-    /**
-     * 序号格式字符中的月
-     */
-    String MONTH = "#month#";
-    /**
-     * 序号格式字符中的日
-     */
-    String DAY = "#day#";
-    /**
-     * 序号格式字符中的格式化后的序号
-     */
-    String SEQ = "#seq#";
-
-    /**
      * 根据传入的key和type生成可用的序号对象。
      * <p/>
      * 如果根据key和默认的{@link GeneratorConfig#getType()}在{@link Sequences}中找不到记录，说明该组合的序号对象还未初次生成，返回的是seq为step的序号对象，该对象数据会写入到{@link SequencesUnlock}中。
@@ -324,7 +312,7 @@ public interface Generator {
      * 如果根据key和默认的{@link GeneratorConfig#getType()}在{@link Sequences}中找到了记录，且在{@link SequencesUnused}也找到了记录，说明该组合生成的序号有部分未使用，返回的是{@link SequencesUnused}中找到的seq最小的序号对象。同时会将{@link SequencesUnused}中找到的seq最小的记录删除，然后写入到{@link SequencesUnlock}中。
      * <p/>
      *
-     * @param key  数据字典中的编码
+     * @param key 数据字典中的编码
      * @return 可用的序号对象
      */
     Sequences generate(String key);
@@ -356,7 +344,20 @@ public interface Generator {
     String generate(String key, String type, Integer minLength);
 
     /**
+     * 将{@link #generate(String, String)}得到的序号对象格式化为补零后的序号字符串，其最小长度通过{@link BaseConfig#getMinLength()}设定。实际上只会用到{@link Sequences#getSeq()}属性
+     * <p/>
+     * pattern支持：{@link FormatPlaceholder#YEAR}(当前年份)、{@link FormatPlaceholder#MONTH}}(当前月份)、{@link FormatPlaceholder#DAY}}(当前日期)、{@link FormatPlaceholder#SEQ}}(生成的字符串序号)几个枚举值通过{@link FormatPlaceholder#getPlaceholder()}得到的字符串
+     *
+     * @param sequences 生成的序号对象
+     * @param pattern   格式
+     * @return 格式化后的字符串
+     */
+    String format(Sequences sequences, String pattern);
+
+    /**
      * 将{@link #generate(String, String)}得到的序号对象格式化为补零后的序号字符串。实际上只会用到{@link Sequences#getSeq()}属性
+     * <p/>
+     * pattern支持：{@link FormatPlaceholder#YEAR}(当前年份)、{@link FormatPlaceholder#MONTH}}(当前月份)、{@link FormatPlaceholder#DAY}}(当前日期)、{@link FormatPlaceholder#SEQ}}(生成的字符串序号)几个枚举值通过{@link FormatPlaceholder#getPlaceholder()}得到的字符串
      *
      * @param sequences 生成的序号对象
      * @param minLength 序号数字最小长度
@@ -366,9 +367,24 @@ public interface Generator {
     String format(Sequences sequences, Integer minLength, String pattern);
 
     /**
+     * 将生成的序号对象格式化为指定格式，格式化后字符串最小长度为{@link BaseConfig#getMinLength()}，不足则补零
+     * <p/>
+     * pattern支持：{@link FormatPlaceholder#YEAR#getPlaceholder()}(当前年份)、{@link FormatPlaceholder#MONTH#getPlaceholder()}(当前月份)、{@link FormatPlaceholder#DAY#getPlaceholder()}(当前日期)、{@link FormatPlaceholder#SEQ#getPlaceholder()}(生成的字符串序号)四个变量
+     * <p/>
+     * seq为1，pattern为#year##month##day#6#seq#，则会格式化为2022013061。此序号含义如下：
+     * <p/>
+     * 序号格式：[年][月][日][固定6开头][序号1，最小位数为{@link BaseConfig#getMinLength()}设置，默认为1，不足则补零]
+     *
+     * @param seq     需要格式化的序号
+     * @param pattern 格式
+     * @return 格式化后的序号字符串
+     */
+    String format(Long seq, String pattern);
+
+    /**
      * 将生成的序号对象格式化为指定格式
      * <p/>
-     * pattern支持：{@link #YEAR}(当前年份)、{@link #MONTH}(当前月份)、{@link #DAY}(当前日期)、{@link #SEQ}(生成的字符串序号)四个变量
+     * pattern支持：{@link FormatPlaceholder#YEAR}}(当前年份)、{@link FormatPlaceholder#MONTH}}(当前月份)、{@link FormatPlaceholder#DAY}}(当前日期)、{@link FormatPlaceholder#SEQ}}(生成的字符串序号)几个枚举值通过{@link FormatPlaceholder#getPlaceholder()}得到的字符串
      * <p/>
      * seq为1，minLength为4，pattern为#year##month##day#6#seq#，则会格式化为2022013060001。此序号含义如下：
      * <p/>
@@ -382,9 +398,25 @@ public interface Generator {
     String format(Long seq, Integer minLength, String pattern);
 
     /**
+     * 将生成的序号对象格式化为指定格式，格式化后字符串最小长度为{@link BaseConfig#getMinLength()}，不足则补零
+     * <p/>
+     * pattern支持：{@link FormatPlaceholder#YEAR}(当前年份)、{@link FormatPlaceholder#MONTH}}(当前月份)、{@link FormatPlaceholder#DAY}}(当前日期)、{@link FormatPlaceholder#SEQ}}(生成的字符串序号)几个枚举值通过{@link FormatPlaceholder#getPlaceholder()}得到的字符串
+     * <p/>
+     * seq为1,start为6，minLength为4，pattern为#year##month##day##seq#，则会格式化为2022013061。此序号含义如下：
+     * <p/>
+     * 序号格式：[年][月][日][固定6开头][序号1，最小位数为{@link BaseConfig#getMinLength()}设置，默认为1，不足则补零]
+     *
+     * @param seq     需要格式化的序号
+     * @param start   序号格式化后以什么字符串开头
+     * @param pattern 序号格式
+     * @return 格式化后的序号字符串
+     */
+    String format(Long seq, String start, String pattern);
+
+    /**
      * 将生成的序号对象格式化为指定格式
      * <p/>
-     * pattern支持：{@link #YEAR}(当前年份)、{@link #MONTH}(当前月份)、{@link #DAY}(当前日期)、{@link #SEQ}(生成的字符串序号)四个变量
+     * pattern支持：{@link FormatPlaceholder#YEAR}(当前年份)、{@link FormatPlaceholder#MONTH}}(当前月份)、{@link FormatPlaceholder#DAY}}(当前日期)、{@link FormatPlaceholder#SEQ}}(生成的字符串序号)几个枚举值通过{@link FormatPlaceholder#getPlaceholder()}得到的字符串
      * <p/>
      * seq为1,start为6，minLength为4，pattern为#year##month##day##seq#，则会格式化为2022013060001。此序号含义如下：
      * <p/>
@@ -400,6 +432,8 @@ public interface Generator {
 
     /**
      * 将已格式化的序号解析为序号对象
+     * <p/>
+     * pattern支持：{@link FormatPlaceholder#YEAR}(当前年份)、{@link FormatPlaceholder#MONTH}}(当前月份)、{@link FormatPlaceholder#DAY}}(当前日期)、{@link FormatPlaceholder#SEQ}}(生成的字符串序号)几个枚举值通过{@link FormatPlaceholder#getPlaceholder()}得到的字符串
      * <p/>
      * 返回的序号对象{@link Sequences#getKey()}为null，{@link Sequences#getType()}为{@link GeneratorConfig#getType()}的默认值，但是临时字段{@link Sequences#getYear()}、{@link Sequences#getMonth()}、{@link Sequences#getDay()}可能有值
      * <p/>
