@@ -51,7 +51,7 @@
                         <configuration>
                             <!-- ${project.basedir}表示当前项目的根目录 -->
                             <file>${project.basedir}/lib/seq-1.5.1.jar</file>
-                            <pomFile>${pom.basedir}/lib/seq-1.5.1-pom.xml</pomFile>
+                            <pomFile>${project.basedir}/lib/seq-1.5.1-pom.xml</pomFile>
                             <sources>${project.basedir}/lib/seq-1.5.1-sources.jar</sources>
                             <repositoryLayout>default</repositoryLayout>
                             <groupId>com.yanghuanglin</groupId>
