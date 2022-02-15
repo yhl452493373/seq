@@ -2,6 +2,7 @@ package com.yanghuanglin.seq.dao;
 
 import com.yanghuanglin.seq.po.SequencesUnused;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -36,4 +37,14 @@ public interface SequencesUnusedDao {
     boolean saveBatch(List<SequencesUnused> sequencesUnusedList);
 
     void createTable();
+
+    /**
+     * 删除所有闲置的序号
+     */
+    boolean deleteAll();
+
+    /**
+     * 删除指定时间段内使用中的序号
+     */
+    boolean deleteByDate(Date begin, Date end);
 }

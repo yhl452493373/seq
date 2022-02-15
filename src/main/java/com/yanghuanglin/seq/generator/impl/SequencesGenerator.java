@@ -249,7 +249,7 @@ public class SequencesGenerator implements Generator {
 
         List<SequencesUnused> sequencesUnusedList = new ArrayList<>();
         for (SequencesUnlock sequencesUnlock : sequencesUnlockList) {
-            sequencesUnusedList.add(new SequencesUnused(sequencesUnlock));
+            sequencesUnusedList.add(new SequencesUnused(sequencesUnlock, new Date()));
         }
 
         //将使用中表的序号放到空闲表中
@@ -265,7 +265,7 @@ public class SequencesGenerator implements Generator {
 
         List<SequencesUnused> sequencesUnusedList = new ArrayList<>();
         for (SequencesUnlock sequencesUnlock : sequencesUnlockList) {
-            sequencesUnusedList.add(new SequencesUnused(sequencesUnlock));
+            sequencesUnusedList.add(new SequencesUnused(sequencesUnlock, new Date()));
         }
 
         //将指定时间段内使用中表的序号放到空闲表中
@@ -279,6 +279,18 @@ public class SequencesGenerator implements Generator {
         if (sequences == null)
             return;
         sequencesUnlockDao.delete(new SequencesUnlock(sequences));
-        sequencesUnusedDao.save(new SequencesUnused(sequences));
+        sequencesUnusedDao.save(new SequencesUnused(sequences, new Date()));
+    }
+
+    @Override
+    public void clear() {
+        sequencesUnlockDao.deleteAll();
+        sequencesUnusedDao.deleteAll();
+    }
+
+    @Override
+    public void clear(Date begin, Date end) {
+        sequencesUnlockDao.deleteByDate(begin, end);
+        sequencesUnusedDao.deleteByDate(begin, end);
     }
 }

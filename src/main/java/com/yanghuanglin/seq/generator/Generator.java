@@ -190,4 +190,14 @@ public interface Generator {
      * @param sequences 需要释放的序号。一般是一个通过{@link Sequences#setKey(String)}、{@link Sequences#setType(String)}、{@link Sequences#setSeq(Long)}三方法一起手动构建或通过{@link Sequences#Sequences(String, String, Long)}构造方法构建的实例对象
      */
     void release(Sequences sequences);
+
+    /**
+     * 清空所有闲置序号和未锁定序号
+     */
+    void clear();
+
+    /**
+     * 清空指定时间段内闲置序号和未锁定序号
+     */
+    void clear(Date begin, Date end);
 }
