@@ -30,7 +30,7 @@ public class SeqTest {
         tableConfig.setTable("sequences");
         tableConfig.setKeyColumn("SEQUENCE_KEY");
         tableConfig.setTypeColumn("SEQUENCE_TYPE");
-        tableConfig.setSeqColumn("CURRENT_ID");
+        tableConfig.setSeqColumn("CURRENT");
         generatorConfig.setTableConfig(tableConfig);
 
         generator = new SequencesGenerator(generatorConfig);
