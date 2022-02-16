@@ -8,7 +8,7 @@
 
 使用方法：
 
-+ 在项目中放置jar包的地方把seq-1.5.1.jar、seq-1.5.1-sources.jar、seq-1.5.1-pom.xml复制过去
++ 在项目中放置jar包的地方把seq-1.5.2.jar、seq-1.5.2-sources.jar、seq-1.5.2-pom.xml复制过去
 + 在pom.xml中增加以下内容，然后执行maven命令：mvn clean
 
 ```xml
@@ -18,7 +18,7 @@
         <dependency>
             <groupId>com.yanghuanglin</groupId>
             <artifactId>seq</artifactId>
-            <version>1.5.1</version>
+            <version>1.5.2</version>
             <exclusions>
                 <!-- 如若你项目中有引用spring-jdbc，则需要排除seq的jdbc依赖 -->
                 <exclusion>
@@ -50,13 +50,13 @@
                         </goals>
                         <configuration>
                             <!-- ${project.basedir}表示当前项目的根目录 -->
-                            <file>${project.basedir}/lib/seq-1.5.1.jar</file>
-                            <pomFile>${project.basedir}/lib/seq-1.5.1-pom.xml</pomFile>
-                            <sources>${project.basedir}/lib/seq-1.5.1-sources.jar</sources>
+                            <file>${project.basedir}/lib/seq-1.5.2.jar</file>
+                            <pomFile>${project.basedir}/lib/seq-1.5.2-pom.xml</pomFile>
+                            <sources>${project.basedir}/lib/seq-1.5.2-sources.jar</sources>
                             <repositoryLayout>default</repositoryLayout>
                             <groupId>com.yanghuanglin</groupId>
                             <artifactId>seq</artifactId>
-                            <version>1.5.1</version>
+                            <version>1.5.2</version>
                             <packaging>jar</packaging>
                             <generatePom>true</generatePom>
                         </configuration>
