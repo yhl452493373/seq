@@ -72,9 +72,9 @@ public class SequencesUnlockDaoImpl implements SequencesUnlockDao {
     @Override
     public void createTable() {
         String sql = "CREATE TABLE IF NOT EXISTS `%s_unlock` ( " +
-                " `%s` VARCHAR ( 255 ) NOT NULL COMMENT '序号英文名称'," +
-                " `%s` VARCHAR ( 255 ) NOT NULL COMMENT '序号类型'," +
-                " `%s` BIGINT ( 2 ) NOT NULL COMMENT '尚未锁定的序号'," +
+                " `%s` VARCHAR ( 64 ) NOT NULL COMMENT '序号英文名称'," +
+                " `%s` VARCHAR ( 64 ) NOT NULL COMMENT '序号类型'," +
+                " `%s` BIGINT ( 20 ) NOT NULL COMMENT '尚未锁定的序号'," +
                 " `%s` DATETIME NOT NULL COMMENT '使用时间'," +
                 " PRIMARY KEY ( `%s`, `%s` ,`%s` ) " +
                 " ) COMMENT '未锁定序号表'";

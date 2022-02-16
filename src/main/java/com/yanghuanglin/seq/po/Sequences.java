@@ -129,9 +129,9 @@ public class Sequences {
      * @return 补零后的序号，若未单独设置序号的长度，则最小长度为{@link BaseConfig#getMinLength()}长度；否则为修改后的长度，不足部分补零
      */
     public String format() {
-        BaseConfig baseConfig = BaseConfig.getInstance();
-        if (baseConfig.getMinLength() != null)
-            return String.format("%0" + baseConfig.getMinLength() + "d", this.seq);
+        Integer minLength = BaseConfig.getInstance().getMinLength();
+        if (minLength != null)
+            return String.format("%0" + minLength + "d", this.seq);
         return String.valueOf(this.seq);
     }
 

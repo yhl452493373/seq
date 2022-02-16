@@ -57,9 +57,9 @@ public class SequencesDaoImpl implements SequencesDao {
     @Override
     public void createTable() {
         String sql = "CREATE TABLE IF NOT EXISTS `%s` ( " +
-                " `%s` VARCHAR ( 255 ) NOT NULL COMMENT '序号英文名称'," +
-                " `%s` VARCHAR ( 255 ) NOT NULL COMMENT '序号类型'," +
-                " `%s` BIGINT ( 2 ) NOT NULL COMMENT '已使用到的序号'," +
+                " `%s` VARCHAR ( 64 ) NOT NULL COMMENT '序号英文名称'," +
+                " `%s` VARCHAR ( 64 ) NOT NULL COMMENT '序号类型'," +
+                " `%s` BIGINT ( 20 ) NOT NULL COMMENT '已使用到的序号'," +
                 " PRIMARY KEY ( `%s`, `%s` ) " +
                 " ) COMMENT '当前序号表'";
         sql = String.format(sql, tableConfig.getTable(),

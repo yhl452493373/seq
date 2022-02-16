@@ -91,9 +91,9 @@ public class SequencesUnusedDaoImpl implements SequencesUnusedDao {
     @Override
     public void createTable() {
         String sql = "CREATE TABLE IF NOT EXISTS `%s_unused` ( " +
-                " `%s` VARCHAR ( 255 ) NOT NULL COMMENT '序号英文名称'," +
-                " `%s` VARCHAR ( 255 ) NOT NULL COMMENT '序号类型'," +
-                " `%s` BIGINT ( 2 ) NOT NULL COMMENT '闲置的的序号'," +
+                " `%s` VARCHAR ( 64 ) NOT NULL COMMENT '序号英文名称'," +
+                " `%s` VARCHAR ( 64 ) NOT NULL COMMENT '序号类型'," +
+                " `%s` BIGINT ( 20 ) NOT NULL COMMENT '闲置的的序号'," +
                 " `%s` DATETIME NOT NULL COMMENT '设为闲置序号的时间'," +
                 " PRIMARY KEY ( `%s`, `%s`, `%s` ) " +
                 " ) COMMENT '闲置序号表'";
