@@ -111,7 +111,7 @@ public class SequencesGenerator implements Generator {
 
     @Override
     public synchronized String generate(String key, String type, Integer minLength) {
-        Sequences sequences = this.generate(key, type);
+        Sequences sequences = generate(key, type);
         if (sequences == null)
             return null;
         return sequences.format(minLength);
@@ -243,6 +243,18 @@ public class SequencesGenerator implements Generator {
     }
 
     @Override
+    public synchronized boolean lock(Sequences sequences, boolean ignoreSeq) {
+        if (!ignoreSeq)
+            return lock(sequences);
+        if (sequences == null)
+            return true;
+        SequencesUnlock condition = new SequencesUnlock(sequences);
+        condition.setSeq(null);
+        //将使用中表的对应数据删除，空闲表中数据在生成时会删除，因此这里不需要处理该表
+        return sequencesUnlockDao.delete(condition);
+    }
+
+    @Override
     public synchronized void release() {
         //列出所有使用中表存在的序号
         List<SequencesUnlock> sequencesUnlockList = sequencesUnlockDao.listAll();
@@ -290,6 +302,20 @@ public class SequencesGenerator implements Generator {
             return;
         sequencesUnlockDao.delete(new SequencesUnlock(sequences));
         sequencesUnusedDao.save(new SequencesUnused(sequences, new Date()));
+    }
+
+    @Override
+    public synchronized void release(Sequences sequences, boolean ignoreSeq) {
+        if (!ignoreSeq) {
+            release(sequences);
+            return;
+        }
+        if (sequences == null)
+            return;
+        SequencesUnlock sequencesUnlock = new SequencesUnlock(sequences);
+        sequencesUnlock.setSeq(null);
+        sequencesUnlockDao.delete(sequencesUnlock);
+        //由于忽略了序号，因此不需要将未使用序号放到SequencesUnused里面
     }
 
     @Override

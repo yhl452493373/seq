@@ -168,6 +168,17 @@ public interface Generator {
     boolean lock(Sequences sequences);
 
     /**
+     * 忽略{@link Sequences#getSeq()} ，仅通过{@link Sequences#getKey()}和{@link Sequences#getType()}来锁定序号。
+     * <p/>
+     * 如果ignoreSeq为false，则等价于{@link #lock(Sequences)}
+     *
+     * @param sequences 需要锁定的序号
+     * @param ignoreSeq 是否忽略序号
+     * @return 锁定结果
+     */
+    boolean lock(Sequences sequences, boolean ignoreSeq);
+
+    /**
      * 释放所有未使用的序号
      * <p/>
      * {@link SequencesUnlock}中未通过{@link #lock(Sequences)}方法锁定的序号会一直存在，调用此方法会将里面的所有序号都移动到{@link SequencesUnused}中，下次生成序号时优先从{@link SequencesUnused}获取。
@@ -204,6 +215,16 @@ public interface Generator {
      * @param sequences 需要释放的序号。一般是一个通过{@link Sequences#setKey(String)}、{@link Sequences#setType(String)}、{@link Sequences#setSeq(Long)}三方法一起手动构建或通过{@link Sequences#Sequences(String, String, Long)}构造方法构建的实例对象
      */
     void release(Sequences sequences);
+
+    /**
+     * 忽略{@link Sequences#getSeq()}来释放指定序号。一般用于业务对象删除后，对应序号需要回收使用时。
+     * <p/>
+     * 如果ignoreSeq为false，则等价于{@link #release(Sequences)}
+     *
+     * @param sequences 需要释放的序号。一般是一个通过{@link Sequences#setKey(String)}、{@link Sequences#setType(String)}、{@link Sequences#setSeq(Long)}三方法一起手动构建或通过{@link Sequences#Sequences(String, String, Long)}构造方法构建的实例对象
+     * @param ignoreSeq 是否忽略序号
+     */
+    void release(Sequences sequences, boolean ignoreSeq);
 
     /**
      * 清空所有闲置序号和未锁定序号

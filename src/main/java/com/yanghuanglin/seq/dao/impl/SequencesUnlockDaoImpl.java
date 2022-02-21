@@ -33,10 +33,15 @@ public class SequencesUnlockDaoImpl implements SequencesUnlockDao {
 
     @Override
     public boolean delete(SequencesUnlock sequencesUnlock) {
-        String sql = "delete from `%s_unlock` where `%s`=? and `%s`=? and `%s`=?";
-        sql = String.format(sql, tableConfig.getTable(), tableConfig.getKeyColumn(), tableConfig.getTypeColumn(), tableConfig.getSeqColumn());
-        int result = this.jdbcTemplate.update(sql, sequencesUnlock.getKey(), sequencesUnlock.getType(), sequencesUnlock.getSeq());
-        return result != 0;
+        String sql = "delete from `%s_unlock` where `%s`=? and `%s`=?";
+        sql = String.format(sql, tableConfig.getTable(), tableConfig.getKeyColumn(), tableConfig.getTypeColumn());
+        if (sequencesUnlock.getSeq() != null) {
+            sql += " and `%s`=?";
+            sql = String.format(sql, tableConfig.getSeqColumn());
+            return this.jdbcTemplate.update(sql, sequencesUnlock.getKey(), sequencesUnlock.getType(), sequencesUnlock.getSeq()) != 0;
+        } else {
+            return this.jdbcTemplate.update(sql, sequencesUnlock.getKey(), sequencesUnlock.getType()) != 0;
+        }
     }
 
     @Override
