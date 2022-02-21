@@ -118,10 +118,22 @@ public class SequencesUnusedDaoImpl implements SequencesUnusedDao {
 
     @Override
     public boolean deleteByDate(Date begin, Date end) {
-        String sql = "delete from `%s_unused` where `%s`>=? and `%s`<=?";
-        sql = String.format(sql, tableConfig.getTable(), tableConfig.getCreateTimeColumn(), tableConfig.getCreateTimeColumn());
-        int result = this.jdbcTemplate.update(sql, begin, end);
-        return result != 0;
+        String sql;
+        if (begin != null && end != null) {
+            sql = "delete from `%s_unused` where `%s`>=? and `%s`<=?";
+            sql = String.format(sql, tableConfig.getTable(), tableConfig.getCreateTimeColumn(), tableConfig.getCreateTimeColumn());
+            return this.jdbcTemplate.update(sql, begin, end) != 0;
+        } else if (begin != null) {
+            sql = "delete from `%s_unused` where `%s`>=?";
+            sql = String.format(sql, tableConfig.getTable(), tableConfig.getCreateTimeColumn());
+            return this.jdbcTemplate.update(sql, begin) != 0;
+        } else if (end != null) {
+            sql = "delete from `%s_unused` where `%s`<=?";
+            sql = String.format(sql, tableConfig.getTable(), tableConfig.getCreateTimeColumn());
+            return this.jdbcTemplate.update(sql, end) != 0;
+        } else {
+            return deleteAll();
+        }
     }
 
     private RowMapper<SequencesUnused> rowMapper() {

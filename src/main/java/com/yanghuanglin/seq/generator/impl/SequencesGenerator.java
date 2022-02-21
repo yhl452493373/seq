@@ -50,7 +50,7 @@ public class SequencesGenerator implements Generator {
      *
      * @param autoCreate 是否自动创建
      */
-    private void createTable(Boolean autoCreate) {
+    private synchronized void createTable(Boolean autoCreate) {
         if (!autoCreate)
             return;
         this.sequencesDao.createTable();
@@ -275,6 +275,16 @@ public class SequencesGenerator implements Generator {
     }
 
     @Override
+    public synchronized void releaseAfter(Date begin) {
+        release(begin, null);
+    }
+
+    @Override
+    public synchronized void releaseBefore(Date end) {
+        release(null, end);
+    }
+
+    @Override
     public synchronized void release(Sequences sequences) {
         if (sequences == null)
             return;
@@ -283,14 +293,24 @@ public class SequencesGenerator implements Generator {
     }
 
     @Override
-    public void clear() {
+    public synchronized void clear() {
         sequencesUnlockDao.deleteAll();
         sequencesUnusedDao.deleteAll();
     }
 
     @Override
-    public void clear(Date begin, Date end) {
+    public synchronized void clear(Date begin, Date end) {
         sequencesUnlockDao.deleteByDate(begin, end);
         sequencesUnusedDao.deleteByDate(begin, end);
+    }
+
+    @Override
+    public synchronized void clearAfter(Date begin) {
+        clear(begin, null);
+    }
+
+    @Override
+    public synchronized void clearBefore(Date end) {
+        clear(null, end);
     }
 }

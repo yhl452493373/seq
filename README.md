@@ -8,7 +8,7 @@
 
 使用方法：
 
-+ 在项目中放置jar包的地方把seq-1.5.2.jar、seq-1.5.2-sources.jar、seq-1.5.2-pom.xml复制过去
++ 在项目中放置jar包的地方把seq-1.6.2.jar、seq-1.6.2-sources.jar、seq-1.6.2-pom.xml复制过去
 + 在pom.xml中增加以下内容，然后执行maven命令：mvn clean
 
 ```xml
@@ -18,7 +18,7 @@
         <dependency>
             <groupId>com.yanghuanglin</groupId>
             <artifactId>seq</artifactId>
-            <version>1.5.2</version>
+            <version>1.6.2</version>
             <exclusions>
                 <!-- 如若你项目中有引用spring-jdbc，则需要排除seq的jdbc依赖 -->
                 <exclusion>
@@ -50,13 +50,13 @@
                         </goals>
                         <configuration>
                             <!-- ${project.basedir}表示当前项目的根目录 -->
-                            <file>${project.basedir}/lib/seq-1.5.2.jar</file>
-                            <pomFile>${project.basedir}/lib/seq-1.5.2-pom.xml</pomFile>
-                            <sources>${project.basedir}/lib/seq-1.5.2-sources.jar</sources>
+                            <file>${project.basedir}/lib/seq-1.6.2.jar</file>
+                            <pomFile>${project.basedir}/lib/seq-1.6.2-pom.xml</pomFile>
+                            <sources>${project.basedir}/lib/seq-1.6.2-sources.jar</sources>
                             <repositoryLayout>default</repositoryLayout>
                             <groupId>com.yanghuanglin</groupId>
                             <artifactId>seq</artifactId>
-                            <version>1.5.2</version>
+                            <version>1.6.2</version>
                             <packaging>jar</packaging>
                             <generatePom>true</generatePom>
                         </configuration>
@@ -479,6 +479,20 @@ public interface Generator {
     void release(Date begin, Date end);
 
     /**
+     * 释放从开始时间开始，到现在时间之间未使用的序号。结束时间为方法执行时的时间
+     *
+     * @param begin 开始时间
+     */
+    void releaseAfter(Date begin);
+
+    /**
+     * 释放结束时间以前的序号
+     *
+     * @param end 结束时间
+     */
+    void releaseBefore(Date end);
+
+    /**
      * 释放指定序号。一般用于业务对象删除后，对应序号需要回收使用时。
      *
      * @param sequences 需要释放的序号。一般是一个通过{@link Sequences#setKey(String)}、{@link Sequences#setType(String)}、{@link Sequences#setSeq(Long)}三方法一起手动构建或通过{@link Sequences#Sequences(String, String, Long)}构造方法构建的实例对象
@@ -494,5 +508,20 @@ public interface Generator {
      * 清空指定时间段内闲置序号和未锁定序号
      */
     void clear(Date begin, Date end);
+
+    /**
+     * 清空从开始时间到限制时间之间闲置序号和未锁定序号，结束时间为方法执行时的时间
+     *
+     * @param begin 开始时间
+     */
+    void clearAfter(Date begin);
+
+    /**
+     * 清空结束时间之前的限制序号和未锁定序号
+     *
+     * @param end 结束时间
+     */
+    void clearBefore(Date end);
 }
+
 ```
