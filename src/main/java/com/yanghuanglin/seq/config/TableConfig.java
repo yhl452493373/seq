@@ -13,7 +13,7 @@ public class TableConfig {
     private String table = "sequences";
 
     /**
-     * 序号英文名称，和序号类型组成唯一组件
+     * 序号英文名称，和序号类型组成唯一主键
      */
     private String keyColumn = "key";
 

@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.yanghuanglin</groupId>
     <artifactId>seq</artifactId>
-    <version>1.7.2</version>
+    <version>1.8.2</version>
     <name>seq</name>
     <description>seq</description>
     <properties>

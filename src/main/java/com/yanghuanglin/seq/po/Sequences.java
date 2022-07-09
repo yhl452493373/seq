@@ -42,6 +42,11 @@ public class Sequences {
      */
     private transient Integer day;
 
+    /**
+     * 临时字段，表示序号对象不包含序号
+     */
+    private transient Boolean withOutSeq;
+
     public Sequences() {
     }
 
@@ -114,6 +119,14 @@ public class Sequences {
         this.day = day;
     }
 
+    public Boolean getWithOutSeq() {
+        return withOutSeq;
+    }
+
+    public void setWithOutSeq(Boolean withOutSeq) {
+        this.withOutSeq = withOutSeq;
+    }
+
     /**
      * 将序号增加指定步长
      *
@@ -156,6 +169,7 @@ public class Sequences {
                 ", year=" + year +
                 ", month=" + month +
                 ", day=" + day +
+                ", withOutSeq=" + withOutSeq +
                 '}';
     }
 }

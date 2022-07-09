@@ -1,10 +1,14 @@
 import com.mysql.cj.jdbc.MysqlDataSource;
+import com.yanghuanglin.seq.config.BaseConfig;
 import com.yanghuanglin.seq.config.GeneratorConfig;
 import com.yanghuanglin.seq.config.TableConfig;
 import com.yanghuanglin.seq.generator.Generator;
 import com.yanghuanglin.seq.generator.impl.SequencesGenerator;
 import com.yanghuanglin.seq.po.Sequences;
 import org.junit.Test;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -26,12 +30,15 @@ public class SeqTest {
         dataSource.setPassword("root");
 
         GeneratorConfig generatorConfig = new GeneratorConfig(dataSource);
+
         TableConfig tableConfig = new TableConfig();
         tableConfig.setTable("sequences");
         tableConfig.setKeyColumn("SEQUENCE_KEY");
         tableConfig.setTypeColumn("SEQUENCE_TYPE");
         tableConfig.setSeqColumn("CURRENT");
         generatorConfig.setTableConfig(tableConfig);
+        generatorConfig.setDayZeroFilling(false);
+        generatorConfig.setMonthZeroFilling(false);
 
         generator = new SequencesGenerator(generatorConfig);
     }
@@ -44,12 +51,9 @@ public class SeqTest {
         Set<String> set = new HashSet<>();
         ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(10, 10, 1, TimeUnit.MINUTES, new ArrayBlockingQueue<>(100));
         for (int i = 0; i < 5; i++) {
-            int finalI = i;
             threadPoolExecutor.execute(() -> {
                 Sequences sequences = generator.generate("SNT", "MISSION");
                 String formattedSeq = generator.format(sequences.getSeq(), "处〔#year#〕10801#seq#");
-//                if (finalI % 2 == 0)
-//                    System.out.println(3 / 0);
                 generator.lock(sequences);
                 set.add(formattedSeq);
                 System.out.println(formattedSeq);

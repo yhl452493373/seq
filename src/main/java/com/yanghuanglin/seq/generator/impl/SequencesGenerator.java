@@ -30,6 +30,8 @@ public class SequencesGenerator implements Generator {
     private final Integer step;
     private final String type;
     private final Integer minLength;
+    private final Boolean monthZeroFilling;
+    private final Boolean dayZeroFilling;
 
     public SequencesGenerator(GeneratorConfig generatorConfig) {
         BaseConfig baseConfig = BaseConfig.getInstance(generatorConfig);
@@ -41,6 +43,8 @@ public class SequencesGenerator implements Generator {
         this.step = baseConfig.getStep();
         this.type = baseConfig.getType();
         this.minLength = baseConfig.getMinLength();
+        this.monthZeroFilling = baseConfig.getMonthZeroFilling();
+        this.dayZeroFilling = baseConfig.getDayZeroFilling();
 
         createTable(generatorConfig.getAutoCreate());
     }
@@ -60,47 +64,65 @@ public class SequencesGenerator implements Generator {
 
 
     @Override
-    public synchronized Sequences generate(String key) {
-        return generate(key, type);
+    public boolean containSeq(String pattern) {
+        return StringUtils.hasLength(pattern) && pattern.contains(SEQ.getPlaceholder());
     }
 
     @Override
-    public synchronized Sequences generate(String key, String type) {
+    public synchronized Sequences generate(String key, Boolean withOutSeq) {
+        return generate(key, type, withOutSeq);
+    }
+
+    @Override
+    public Sequences generate(String key) {
+        return generate(key, false);
+    }
+
+    @Override
+    public synchronized Sequences generate(String key, String type, Boolean withOutSeq) {
         return transactionTemplate.execute(status -> {
             try {
                 //根据传入的key和type新生成查询条件对象
                 Sequences condition = new Sequences(key, type);
 
-                //找到正在使用的最大序号
-                Sequences sequences = sequencesDao.find(condition);
-                if (sequences == null) {
-                    //不存在，说明还没生成，将新生成的入库，此时序号为默认的0
-                    sequences = condition;
-                    sequencesDao.save(sequences);
-                }
+                if (!withOutSeq) {
+                    //不是不包含序号的序号对象（有可能格式中只配置了#year##month##day#，序号就不用自增，也不用入库，直接返回即可）
+                    //找到正在使用的最大序号
+                    Sequences sequences = sequencesDao.find(condition);
+                    boolean result = true;
+                    if (sequences == null) {
+                        //不存在，说明还没生成，将新生成的入库，此时序号为默认的0
+                        sequences = condition;
+                        result = sequencesDao.save(sequences);
+                    }
 
-                //根据传入的key和type查找空闲编号最小的一个
-                SequencesUnused conditionIdle = new SequencesUnused(condition);
-                SequencesUnused sequencesUnused = sequencesUnusedDao.findMinSeq(conditionIdle);
+                    //根据传入的key和type查找空闲编号最小的一个
+                    SequencesUnused conditionIdle = new SequencesUnused(condition);
+                    SequencesUnused sequencesUnused = sequencesUnusedDao.findMinSeq(conditionIdle);
 
-                if (sequencesUnused == null) {
-                    //空闲编号不存在，说明是未生成过，序号需要增加后直接使用，同时将新生成的写入到使用中表
-                    sequences.increase(step);
-                    SequencesUnlock sequencesUnlock = new SequencesUnlock(sequences);
-                    sequencesUnlock.setCreateTime(new Date());
+                    if (sequencesUnused == null) {
+                        //空闲编号不存在，说明是未生成过，序号需要增加后直接使用，同时将新生成的写入到使用中表
+                        sequences.increase(step);
+                        SequencesUnlock sequencesUnlock = new SequencesUnlock(sequences);
+                        sequencesUnlock.setCreateTime(new Date());
 
-                    sequencesDao.update(sequences);
-                    sequencesUnlockDao.save(sequencesUnlock);
+                        result = result && sequencesDao.update(sequences) &&
+                                sequencesUnlockDao.save(sequencesUnlock);
+                    } else {
+                        //空闲编号存在，说明已经生成过，序号不需要增加，直接使用。同时将该空闲编号移动到使用中表
+                        sequences = new Sequences(sequencesUnused);
+                        SequencesUnlock sequencesUnlock = new SequencesUnlock(sequencesUnused);
+                        sequencesUnlock.setCreateTime(new Date());
+
+                        result = result && sequencesUnlockDao.save(sequencesUnlock) &&
+                                sequencesUnusedDao.delete(sequencesUnused);
+                    }
+                    sequences.setWithOutSeq(false);
+                    return result ? sequences : null;
                 } else {
-                    //空闲编号存在，说明已经生成过，序号不需要增加，直接使用。同时将该空闲编号移动到使用中表
-                    sequences = new Sequences(sequencesUnused);
-                    SequencesUnlock sequencesUnlock = new SequencesUnlock(sequencesUnused);
-                    sequencesUnlock.setCreateTime(new Date());
-
-                    sequencesUnlockDao.save(sequencesUnlock);
-                    sequencesUnusedDao.delete(sequencesUnused);
+                    condition.setWithOutSeq(true);
+                    return condition;
                 }
-                return sequences;
             } catch (Exception e) {
                 e.printStackTrace();
                 status.setRollbackOnly();
@@ -110,11 +132,21 @@ public class SequencesGenerator implements Generator {
     }
 
     @Override
-    public synchronized String generate(String key, String type, Integer minLength) {
-        Sequences sequences = generate(key, type);
+    public Sequences generate(String key, String type) {
+        return generate(key, type, false);
+    }
+
+    @Override
+    public synchronized String generate(String key, String type, Integer minLength, Boolean withOutSeq) {
+        Sequences sequences = generate(key, type, withOutSeq);
         if (sequences == null)
             return null;
         return sequences.format(minLength);
+    }
+
+    @Override
+    public String generate(String key, String type, Integer minLength) {
+        return generate(key, type, minLength, false);
     }
 
     @Override
@@ -148,9 +180,12 @@ public class SequencesGenerator implements Generator {
             start = "";
         String seqString = start + new Sequences(seq).format(minLength);
         Calendar calendar = Calendar.getInstance();
-        pattern = pattern.replaceAll(YEAR.getPlaceholder(), String.valueOf(calendar.get(Calendar.YEAR)));
-        pattern = pattern.replaceAll(MONTH.getPlaceholder(), String.format("%02d", calendar.get(Calendar.MONTH) + 1));
-        pattern = pattern.replaceAll(DAY.getPlaceholder(), String.valueOf(calendar.get(Calendar.DAY_OF_MONTH)));
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH) + 1;
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        pattern = pattern.replaceAll(YEAR.getPlaceholder(), String.valueOf(year));
+        pattern = pattern.replaceAll(MONTH.getPlaceholder(), monthZeroFilling ? String.format("%02d", month) : String.valueOf(month));
+        pattern = pattern.replaceAll(DAY.getPlaceholder(), dayZeroFilling ? String.format("%02d", day) : String.valueOf(day));
         pattern = pattern.replaceAll(SEQ.getPlaceholder(), seqString);
         return pattern;
     }
@@ -228,6 +263,7 @@ public class SequencesGenerator implements Generator {
         sequences.setMonth(StringUtils.hasLength(month) ? Integer.valueOf(month) : null);
         sequences.setDay(StringUtils.hasLength(day) ? Integer.valueOf(day) : null);
         sequences.setSeq(StringUtils.hasLength(seq) ? Long.parseLong(seq) : 0L);
+        sequences.setWithOutSeq(!StringUtils.hasLength(seq));
         sequences.setType(type);
 
         return sequences;
@@ -235,27 +271,43 @@ public class SequencesGenerator implements Generator {
 
     @Override
     public synchronized boolean lock(Sequences sequences) {
-        if (sequences == null)
+        if (sequences == null || sequences.getWithOutSeq())
             return true;
         SequencesUnlock condition = new SequencesUnlock(sequences);
         //将使用中表的对应数据删除，空闲表中数据在生成时会删除，因此这里不需要处理该表
-        return sequencesUnlockDao.delete(condition);
+        return Boolean.TRUE.equals(transactionTemplate.execute(status -> {
+            try {
+                return sequencesUnlockDao.delete(condition);
+            } catch (Exception e) {
+                e.printStackTrace();
+                status.setRollbackOnly();
+                return false;
+            }
+        }));
     }
 
     @Override
     public synchronized boolean lock(Sequences sequences, boolean ignoreSeq) {
         if (!ignoreSeq)
             return lock(sequences);
-        if (sequences == null)
+        if (sequences == null || sequences.getWithOutSeq())
             return true;
         SequencesUnlock condition = new SequencesUnlock(sequences);
         condition.setSeq(null);
         //将使用中表的对应数据删除，空闲表中数据在生成时会删除，因此这里不需要处理该表
-        return sequencesUnlockDao.delete(condition);
+        return Boolean.TRUE.equals(transactionTemplate.execute(status -> {
+            try {
+                return sequencesUnlockDao.delete(condition);
+            } catch (Exception e) {
+                e.printStackTrace();
+                status.setRollbackOnly();
+                return false;
+            }
+        }));
     }
 
     @Override
-    public synchronized void release() {
+    public synchronized boolean release() {
         //列出所有使用中表存在的序号
         List<SequencesUnlock> sequencesUnlockList = sequencesUnlockDao.listAll();
 
@@ -265,13 +317,23 @@ public class SequencesGenerator implements Generator {
         }
 
         //将使用中表的序号放到空闲表中
-        sequencesUnusedDao.saveBatch(sequencesUnusedList);
         //删除所有使用中表的数据
-        sequencesUnlockDao.deleteAll();
+        return Boolean.TRUE.equals(transactionTemplate.execute(status -> {
+            try {
+                //将使用中表的序号放到空闲表中
+                //删除所有使用中表的数据
+                return sequencesUnusedDao.saveBatch(sequencesUnusedList) &&
+                        sequencesUnlockDao.deleteAll();
+            } catch (Exception e) {
+                e.printStackTrace();
+                status.setRollbackOnly();
+                return false;
+            }
+        }));
     }
 
     @Override
-    public synchronized void release(Date begin, Date end) {
+    public synchronized boolean release(Date begin, Date end) {
         //列出指定时间段内使用中表存在的序号
         List<SequencesUnlock> sequencesUnlockList = sequencesUnlockDao.listByDate(begin, end);
 
@@ -281,9 +343,19 @@ public class SequencesGenerator implements Generator {
         }
 
         //将指定时间段内使用中表的序号放到空闲表中
-        sequencesUnusedDao.saveBatch(sequencesUnusedList);
         //删除指定时间段内使用中表的数据
-        sequencesUnlockDao.deleteByDate(begin, end);
+        return Boolean.TRUE.equals(transactionTemplate.execute(status -> {
+            try {
+                //将指定时间段内使用中表的序号放到空闲表中
+                //删除指定时间段内使用中表的数据
+                return sequencesUnusedDao.saveBatch(sequencesUnusedList) &&
+                        sequencesUnlockDao.deleteByDate(begin, end);
+            } catch (Exception e) {
+                e.printStackTrace();
+                status.setRollbackOnly();
+                return false;
+            }
+        }));
     }
 
     @Override
@@ -297,37 +369,68 @@ public class SequencesGenerator implements Generator {
     }
 
     @Override
-    public synchronized void release(Sequences sequences) {
+    public synchronized boolean release(Sequences sequences) {
         if (sequences == null)
-            return;
-        sequencesUnlockDao.delete(new SequencesUnlock(sequences));
-        sequencesUnusedDao.save(new SequencesUnused(sequences, new Date()));
+            return true;
+        return Boolean.TRUE.equals(transactionTemplate.execute(status -> {
+            try {
+                return sequencesUnlockDao.delete(new SequencesUnlock(sequences))
+                        && sequencesUnusedDao.save(new SequencesUnused(sequences, new Date()));
+            } catch (Exception e) {
+                e.printStackTrace();
+                status.setRollbackOnly();
+                return false;
+            }
+        }));
     }
 
     @Override
-    public synchronized void release(Sequences sequences, boolean ignoreSeq) {
+    public synchronized boolean release(Sequences sequences, boolean ignoreSeq) {
         if (!ignoreSeq) {
-            release(sequences);
-            return;
+            return release(sequences);
         }
         if (sequences == null)
-            return;
-        SequencesUnlock sequencesUnlock = new SequencesUnlock(sequences);
-        sequencesUnlock.setSeq(null);
-        sequencesUnlockDao.delete(sequencesUnlock);
-        //由于忽略了序号，因此不需要将未使用序号放到SequencesUnused里面
+            return true;
+        return Boolean.TRUE.equals(transactionTemplate.execute(status -> {
+            try {
+                SequencesUnlock sequencesUnlock = new SequencesUnlock(sequences);
+                sequencesUnlock.setSeq(null);
+                //由于忽略了序号，因此不需要将未使用序号放到SequencesUnused里面
+                return sequencesUnlockDao.delete(sequencesUnlock);
+            } catch (Exception e) {
+                e.printStackTrace();
+                status.setRollbackOnly();
+                return false;
+            }
+        }));
     }
 
     @Override
-    public synchronized void clear() {
-        sequencesUnlockDao.deleteAll();
-        sequencesUnusedDao.deleteAll();
+    public synchronized boolean clear() {
+        return Boolean.TRUE.equals(transactionTemplate.execute(status -> {
+            try {
+                return sequencesUnlockDao.deleteAll() &&
+                        sequencesUnusedDao.deleteAll();
+            } catch (Exception e) {
+                e.printStackTrace();
+                status.setRollbackOnly();
+                return false;
+            }
+        }));
     }
 
     @Override
-    public synchronized void clear(Date begin, Date end) {
-        sequencesUnlockDao.deleteByDate(begin, end);
-        sequencesUnusedDao.deleteByDate(begin, end);
+    public synchronized boolean clear(Date begin, Date end) {
+        return Boolean.TRUE.equals(transactionTemplate.execute(status -> {
+            try {
+                return sequencesUnlockDao.deleteByDate(begin, end) &&
+                        sequencesUnusedDao.deleteByDate(begin, end);
+            } catch (Exception e) {
+                e.printStackTrace();
+                status.setRollbackOnly();
+                return false;
+            }
+        }));
     }
 
     @Override

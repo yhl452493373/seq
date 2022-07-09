@@ -11,6 +11,14 @@ import java.util.Date;
 
 public interface Generator {
     /**
+     * 判断格式定义中是否有序号
+     *
+     * @param pattern 格式
+     * @return 是否包含序号
+     */
+    boolean containSeq(String pattern);
+
+    /**
      * 根据传入的key和type生成可用的序号对象。
      * <p/>
      * 如果根据key和默认的{@link GeneratorConfig#getType()}在{@link Sequences}中找不到记录，说明该组合的序号对象还未初次生成，返回的是seq为step的序号对象，该对象数据会写入到{@link SequencesUnlock}中。
@@ -18,8 +26,14 @@ public interface Generator {
      * 如果根据key和默认的{@link GeneratorConfig#getType()}在{@link Sequences}中找到了记录，且在{@link SequencesUnused}也找到了记录，说明该组合生成的序号有部分未使用，返回的是{@link SequencesUnused}中找到的seq最小的序号对象。同时会将{@link SequencesUnused}中找到的seq最小的记录删除，然后写入到{@link SequencesUnlock}中。
      * <p/>
      *
-     * @param key 数据字典中的编码
+     * @param key        数据字典中的编码
+     * @param withOutSeq 序号对象不包含序号，其值通过{@link #containSeq(String)}来判断
      * @return 可用的序号对象
+     */
+    Sequences generate(String key, Boolean withOutSeq);
+
+    /**
+     * 同 {@link #generate(String, Boolean)}，第二个参数默认为false
      */
     Sequences generate(String key);
 
@@ -31,26 +45,38 @@ public interface Generator {
      * 如果根据key和type在{@link Sequences}中找到了记录，且在{@link SequencesUnused}也找到了记录，说明该组合生成的序号有部分未使用，返回的是{@link SequencesUnused}中找到的seq最小的序号对象。同时会将{@link SequencesUnused}中找到的seq最小的记录删除，然后写入到{@link SequencesUnlock}中。
      * <p/>
      *
-     * @param key  数据字典中的编码
-     * @param type 序号类型
+     * @param key        数据字典中的编码
+     * @param type       序号类型
+     * @param withOutSeq 序号对象不包含序号，其值通过{@link #containSeq(String)}来判断
      * @return 可用的序号对象
+     */
+    Sequences generate(String key, String type, Boolean withOutSeq);
+
+    /**
+     * 同{@link #generate(String, String, Boolean)}，第三个参数默认为false
      */
     Sequences generate(String key, String type);
 
     /**
-     * 返回根据{@link #generate(String, String)}得到的序号对象，补零后的序号字符串
+     * 返回根据{@link #generate(String, String, Boolean)}得到的序号对象，补零后的序号字符串
      * <p/>
      * 如生成的为3，而minLength为5，则返回的是00003
      *
-     * @param key       数据字典中的编码
-     * @param type      序号类型
-     * @param minLength 序号数字最小长度
+     * @param key        数据字典中的编码
+     * @param type       序号类型
+     * @param minLength  序号数字最小长度
+     * @param withOutSeq 序号对象不包含序号，其值通过{@link #containSeq(String)}来判断
      * @return 补零后的字符串
+     */
+    String generate(String key, String type, Integer minLength, Boolean withOutSeq);
+
+    /**
+     * 同{@link #generate(String, String, Integer, Boolean)}，第四个参数默认为false
      */
     String generate(String key, String type, Integer minLength);
 
     /**
-     * 将{@link #generate(String, String)}得到的序号对象格式化为补零后的序号字符串，其最小长度通过{@link BaseConfig#getMinLength()}设定。实际上只会用到{@link Sequences#getSeq()}属性
+     * 将{@link #generate(String, String, Boolean)}得到的序号对象格式化为补零后的序号字符串，其最小长度通过{@link BaseConfig#getMinLength()}设定。实际上只会用到{@link Sequences#getSeq()}属性
      * <p/>
      * pattern支持：{@link FormatPlaceholder#YEAR}(当前年份)、{@link FormatPlaceholder#MONTH}}(当前月份)、{@link FormatPlaceholder#DAY}}(当前日期)、{@link FormatPlaceholder#SEQ}}(生成的字符串序号)几个枚举值通过{@link FormatPlaceholder#getPlaceholder()}得到的字符串
      *
@@ -61,7 +87,7 @@ public interface Generator {
     String format(Sequences sequences, String pattern);
 
     /**
-     * 将{@link #generate(String, String)}得到的序号对象格式化为补零后的序号字符串。实际上只会用到{@link Sequences#getSeq()}属性
+     * 将{@link #generate(String, String, Boolean)}得到的序号对象格式化为补零后的序号字符串。实际上只会用到{@link Sequences#getSeq()}属性
      * <p/>
      * pattern支持：{@link FormatPlaceholder#YEAR}(当前年份)、{@link FormatPlaceholder#MONTH}}(当前月份)、{@link FormatPlaceholder#DAY}}(当前日期)、{@link FormatPlaceholder#SEQ}}(生成的字符串序号)几个枚举值通过{@link FormatPlaceholder#getPlaceholder()}得到的字符串
      *
@@ -158,7 +184,7 @@ public interface Generator {
     /**
      * 锁定指定序号，在序号生成后，调用该序号的逻辑完成后需要执行此方法
      * <p/>
-     * 如办理案件时，先调用{@link #generate(String, String)}或者{@link #generate(String, String, Integer)}生成了序号，之后对案件进行了入库，如果入库完毕，则将该序号锁定，说明这个序号已被使用
+     * 如办理案件时，先调用{@link #generate(String, String, Boolean)}或者{@link #generate(String, String, Integer, Boolean)}生成了序号，之后对案件进行了入库，如果入库完毕，则将该序号锁定，说明这个序号已被使用
      * <p/>
      * 注意，此处的锁定非数据库中锁定，而是{@link SequencesUnused}和{@link SequencesUnlock}中均不存在key、type、seq相同的记录视为锁定。因此此处实际是把这两个表中的记录均删除了
      *
@@ -183,7 +209,7 @@ public interface Generator {
      * <p/>
      * {@link SequencesUnlock}中未通过{@link #lock(Sequences)}方法锁定的序号会一直存在，调用此方法会将里面的所有序号都移动到{@link SequencesUnused}中，下次生成序号时优先从{@link SequencesUnused}获取。
      */
-    void release();
+    boolean release();
 
     /**
      * 释放指定时间段内未使用的序号
@@ -193,7 +219,7 @@ public interface Generator {
      * @param begin 开始时间
      * @param end   结束时间
      */
-    void release(Date begin, Date end);
+    boolean release(Date begin, Date end);
 
     /**
      * 释放从开始时间开始，到现在时间之间未使用的序号。结束时间为方法执行时的时间
@@ -214,7 +240,7 @@ public interface Generator {
      *
      * @param sequences 需要释放的序号。一般是一个通过{@link Sequences#setKey(String)}、{@link Sequences#setType(String)}、{@link Sequences#setSeq(Long)}三方法一起手动构建或通过{@link Sequences#Sequences(String, String, Long)}构造方法构建的实例对象
      */
-    void release(Sequences sequences);
+    boolean release(Sequences sequences);
 
     /**
      * 忽略{@link Sequences#getSeq()}来释放指定序号。一般用于业务对象删除后，对应序号需要回收使用时。
@@ -224,17 +250,17 @@ public interface Generator {
      * @param sequences 需要释放的序号。一般是一个通过{@link Sequences#setKey(String)}、{@link Sequences#setType(String)}、{@link Sequences#setSeq(Long)}三方法一起手动构建或通过{@link Sequences#Sequences(String, String, Long)}构造方法构建的实例对象
      * @param ignoreSeq 是否忽略序号
      */
-    void release(Sequences sequences, boolean ignoreSeq);
+    boolean release(Sequences sequences, boolean ignoreSeq);
 
     /**
      * 清空所有闲置序号和未锁定序号
      */
-    void clear();
+    boolean clear();
 
     /**
      * 清空指定时间段内闲置序号和未锁定序号
      */
-    void clear(Date begin, Date end);
+    boolean clear(Date begin, Date end);
 
     /**
      * 清空从开始时间到限制时间之间闲置序号和未锁定序号，结束时间为方法执行时的时间

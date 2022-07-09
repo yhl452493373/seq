@@ -28,6 +28,8 @@ public class BaseConfig {
     private Integer step;
     private String type;
     private Integer minLength;
+    private Boolean monthZeroFilling;
+    private Boolean dayZeroFilling;
 
     private BaseConfig() {
     }
@@ -48,10 +50,10 @@ public class BaseConfig {
             synchronized (BaseConfig.class) {
                 if (instance == null) {
                     instance = new BaseConfig();
+                    instance.init(generatorConfig);
                 }
             }
         }
-        instance.init(generatorConfig);
         return instance;
     }
 
@@ -125,46 +127,47 @@ public class BaseConfig {
         return minLength;
     }
 
+    public Boolean getMonthZeroFilling() {
+        if (monthZeroFilling == null)
+            throw new NullPointerException("请先初始化BaseConfig");
+        return monthZeroFilling;
+    }
+
+    public void setMonthZeroFilling(Boolean monthZeroFilling) {
+        this.monthZeroFilling = monthZeroFilling;
+    }
+
+    public Boolean getDayZeroFilling() {
+        if (dayZeroFilling == null)
+            throw new NullPointerException("请先初始化BaseConfig");
+        return dayZeroFilling;
+    }
+
+    public void setDayZeroFilling(Boolean dayZeroFilling) {
+        this.dayZeroFilling = dayZeroFilling;
+    }
+
     public void setMinLength(Integer minLength) {
         this.minLength = minLength;
     }
 
     private void init(GeneratorConfig generatorConfig) {
-        //数据库操作模板
-        JdbcTemplate jdbcTemplate = generatorConfig.getJdbcTemplate();
-
-        if (jdbcTemplate == null) {
-            //数据源
-            DataSource dataSource = generatorConfig.getDataSource();
-            if (dataSource == null)
-                //若数据库操作模板为空，也没有配置数据源，则抛出异常
-                throw new NullPointerException("数据源不能为空");
-            //否则以数据源创建数据库操作模板
-            jdbcTemplate = new JdbcTemplate(dataSource);
-        }
-
-        if (generatorConfig.getTransactionTemplate() == null) {
-            //若没有配置事务操作模板，则从配置中取事务管理器
-            DataSourceTransactionManager transactionManager = generatorConfig.getTransactionManager();
-            if (transactionManager == null) {
-                //若未配置事务管理器，则通过数据源新建
-                DataSource dataSource = jdbcTemplate.getDataSource();
-                if (dataSource == null)
-                    throw new NullPointerException("数据源不能为空");
-                transactionManager = new DataSourceTransactionManager(dataSource);
-            }
-            //通过事务管理器创建事务操作模板
-            transactionTemplate = new TransactionTemplate(transactionManager);
-        } else {
-            //获取事务操作模板
-            transactionTemplate = generatorConfig.getTransactionTemplate();
-        }
-
+        //数据源
+        DataSource dataSource = generatorConfig.getDataSource();
+        if (dataSource == null)
+            //若数据库操作模板为空，也没有配置数据源，则抛出异常
+            throw new NullPointerException("数据源不能为空");
+        //否则以数据源创建数据库操作模板
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        DataSourceTransactionManager transactionManager = new DataSourceTransactionManager(dataSource);
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
         this.sequencesDao = new SequencesDaoImpl(jdbcTemplate, generatorConfig.getTableConfig());
         this.sequencesUnusedDao = new SequencesUnusedDaoImpl(jdbcTemplate, generatorConfig.getTableConfig());
         this.sequencesUnlockDao = new SequencesUnlockDaoImpl(jdbcTemplate, generatorConfig.getTableConfig());
         this.step = generatorConfig.getStep();
         this.type = generatorConfig.getType();
         this.minLength = generatorConfig.getMinLength();
+        this.monthZeroFilling = generatorConfig.getMonthZeroFilling();
+        this.dayZeroFilling = generatorConfig.getDayZeroFilling();
     }
 }
