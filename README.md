@@ -8,7 +8,7 @@
 
 使用方法：
 
-+ 在项目中放置jar包的地方把seq-1.7.2.jar、seq-1.7.2-sources.jar、seq-1.7.2-pom.xml复制过去
++ 在项目中放置jar包的地方把seq-1.8.2.jar、seq-1.8.2-sources.jar、seq-1.8.2-pom.xml复制过去
 + 在pom.xml中增加以下内容，然后执行maven命令：mvn clean
 
 ```xml
@@ -18,7 +18,7 @@
         <dependency>
             <groupId>com.yanghuanglin</groupId>
             <artifactId>seq</artifactId>
-            <version>1.7.2</version>
+            <version>1.8.2</version>
             <exclusions>
                 <!-- 如若你项目中有引用spring-jdbc，则需要排除seq的jdbc依赖 -->
                 <exclusion>
@@ -50,13 +50,13 @@
                         </goals>
                         <configuration>
                             <!-- ${project.basedir}表示当前项目的根目录 -->
-                            <file>${project.basedir}/lib/seq-1.7.2.jar</file>
-                            <pomFile>${project.basedir}/lib/seq-1.7.2-pom.xml</pomFile>
-                            <sources>${project.basedir}/lib/seq-1.7.2-sources.jar</sources>
+                            <file>${project.basedir}/lib/seq-1.8.2.jar</file>
+                            <pomFile>${project.basedir}/lib/seq-1.8.2-pom.xml</pomFile>
+                            <sources>${project.basedir}/lib/seq-1.8.2-sources.jar</sources>
                             <repositoryLayout>default</repositoryLayout>
                             <groupId>com.yanghuanglin</groupId>
                             <artifactId>seq</artifactId>
-                            <version>1.7.2</version>
+                            <version>1.8.2</version>
                             <packaging>jar</packaging>
                             <generatePom>true</generatePom>
                         </configuration>
@@ -68,78 +68,7 @@
 </project>
 ```
 
-+ springboot中配置方式一（优先）：直接注入已有jdbcTemplate和transactionTemplate
-
-```java
-package com.yanghuanglin.springseq.baseConfig;
-
-import com.yanghuanglin.seq.baseConfig.GeneratorConfig;
-import com.yanghuanglin.seq.baseConfig.TableConfig;
-import com.yanghuanglin.seq.generator.Generator;
-import com.yanghuanglin.seq.generator.impl.SequencesGenerator;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.transaction.support.TransactionTemplate;
-
-import javax.annotation.Resource;
-
-/**
- * 基于已有的jdbcTemplate和transactionTemplate，一般如果引用了spring的数据库操作，如jpa、mybatis，都可以直接注入
- */
-@Configuration
-public class SeqGeneratorConfig {
-    /**
-     * 注入已有的数据库操作模板
-     */
-    @Resource
-    private JdbcTemplate jdbcTemplate;
-    /**
-     * 注入已有的事务操作模板
-     */
-    @Resource
-    private TransactionTemplate transactionTemplate;
-
-    /**
-     * 序号表配置类
-     */
-    @Bean
-    public TableConfig tableConfig() {
-        TableConfig tableConfig = new TableConfig();
-        //自定义表名、字段名
-        tableConfig.setTable("sequences");
-        tableConfig.setKeyColumn("SEQUENCE_KEY");
-        tableConfig.setTypeColumn("SEQUENCE_TYPE");
-        tableConfig.setSeqColumn("NEXT_ID");
-        tableConfig.setCreateTimeColumn("CREATE_TIME");
-        return tableConfig;
-    }
-
-    /**
-     * 序号生成器配置类
-     * @param tableConfig 序号表配置类
-     */
-    @Bean
-    public GeneratorConfig generatorConfig(TableConfig tableConfig) {
-        GeneratorConfig generatorConfig = new GeneratorConfig();
-        generatorConfig.setJdbcTemplate(jdbcTemplate);
-        generatorConfig.setTransactionTemplate(transactionTemplate);
-        generatorConfig.setTableConfig(tableConfig);
-        return generatorConfig;
-    }
-
-    /**
-     * 注册序号生成器类
-     * @param generatorConfig 序号生成器配置类
-     */
-    @Bean
-    public Generator generator(GeneratorConfig generatorConfig) {
-        return new SequencesGenerator(generatorConfig);
-    }
-}
-```
-
-+ springboot中配置方式二：注入已有的dataSource或自行构建dataSource，通过dataSource自动生成jdbcTemplate和transactionTemplate
++ springboot中配置方式：注入已有的dataSource或自行构建dataSource，通过dataSource自动生成jdbcTemplate和transactionTemplate
 
 ```java
 package com.yanghuanglin.springseq.baseConfig;
@@ -160,7 +89,7 @@ import javax.sql.DataSource;
 @Configuration
 public class SeqGeneratorConfig {
     /**
-     * 注入已有的数据源，果没有，也可以自行构建
+     * 注入已有的数据源，如果没有，也可以自行构建
      */
     @Resource
     private DataSource dataSource;
@@ -276,17 +205,13 @@ GeneratorConfig配置项，通过set方法设置
 | 配置项                 | 类型                                                               | 默认值              | 说明               |
 |---------------------|------------------------------------------------------------------|------------------|------------------|
 | dataSource          | javax.sql.DataSource                                             | null             | 数据源              |
-| jdbcTemplate        | org.springframework.jdbc.core.JdbcTemplate                       | null             | 数据库操作模板          |
-| transactionTemplate | org.springframework.jdbc.core.JdbcTemplate                       | null             | 事务操作模板           |
-| transactionManager  | org.springframework.jdbc.datasource.DataSourceTransactionManager | null             | 事务管理器            |
+| monthZeroFilling        | Boolean                       | true             | 月份不足2位时自动补零          |
+| dayZeroFilling | Boolean                      | true             | 当前日期不足2位时自动补零           |
 | autoCreate          | Boolean                                                          | true             | 开启自动建表           |
 | step                | Integer                                                          | 1                | 序号增加时的步长         |
 | type                | String                                                           | DEFAULT          | 默认序号类型           |
 | minLength           | Integer                                                          | 1                | 默认序号格式化后长度，不足的补零 |
 | tableConfig         | com.yanghuanglin.seq.baseConfig.TableConfig                      | TableConfig的默认配置 | 表配置              |
-
-以上配置中，jdbcTemplate和transactionTemplate优先级最高，如果jdbcTemplate、transactionTemplate、dataSource、transactionManager同时配置，则dataSource和transactionManager无效；
-可进行这几种组合：dataSource+autoCreate+step+minLength+tableConfig，jdbcTemplate+transactionTemplate+autoCreate+step+minLength+tableConfig，jdbcTemplate+transactionManager+autoCreate+step+minLength+tableConfig
 
 ---
 Generator方法如下：
@@ -305,6 +230,14 @@ import java.util.Date;
 
 public interface Generator {
     /**
+     * 判断格式定义中是否有序号
+     *
+     * @param pattern 格式
+     * @return 是否包含序号
+     */
+    boolean containSeq(String pattern);
+
+    /**
      * 根据传入的key和type生成可用的序号对象。
      * <p/>
      * 如果根据key和默认的{@link GeneratorConfig#getType()}在{@link Sequences}中找不到记录，说明该组合的序号对象还未初次生成，返回的是seq为step的序号对象，该对象数据会写入到{@link SequencesUnlock}中。
@@ -312,8 +245,14 @@ public interface Generator {
      * 如果根据key和默认的{@link GeneratorConfig#getType()}在{@link Sequences}中找到了记录，且在{@link SequencesUnused}也找到了记录，说明该组合生成的序号有部分未使用，返回的是{@link SequencesUnused}中找到的seq最小的序号对象。同时会将{@link SequencesUnused}中找到的seq最小的记录删除，然后写入到{@link SequencesUnlock}中。
      * <p/>
      *
-     * @param key 数据字典中的编码
+     * @param key        数据字典中的编码
+     * @param withOutSeq 序号对象不包含序号，其值通过{@link #containSeq(String)}来判断
      * @return 可用的序号对象
+     */
+    Sequences generate(String key, Boolean withOutSeq);
+
+    /**
+     * 同 {@link #generate(String, Boolean)}，第二个参数默认为false
      */
     Sequences generate(String key);
 
@@ -325,26 +264,38 @@ public interface Generator {
      * 如果根据key和type在{@link Sequences}中找到了记录，且在{@link SequencesUnused}也找到了记录，说明该组合生成的序号有部分未使用，返回的是{@link SequencesUnused}中找到的seq最小的序号对象。同时会将{@link SequencesUnused}中找到的seq最小的记录删除，然后写入到{@link SequencesUnlock}中。
      * <p/>
      *
-     * @param key  数据字典中的编码
-     * @param type 序号类型
+     * @param key        数据字典中的编码
+     * @param type       序号类型
+     * @param withOutSeq 序号对象不包含序号，其值通过{@link #containSeq(String)}来判断
      * @return 可用的序号对象
+     */
+    Sequences generate(String key, String type, Boolean withOutSeq);
+
+    /**
+     * 同{@link #generate(String, String, Boolean)}，第三个参数默认为false
      */
     Sequences generate(String key, String type);
 
     /**
-     * 返回根据{@link #generate(String, String)}得到的序号对象，补零后的序号字符串
+     * 返回根据{@link #generate(String, String, Boolean)}得到的序号对象，补零后的序号字符串
      * <p/>
      * 如生成的为3，而minLength为5，则返回的是00003
      *
-     * @param key       数据字典中的编码
-     * @param type      序号类型
-     * @param minLength 序号数字最小长度
+     * @param key        数据字典中的编码
+     * @param type       序号类型
+     * @param minLength  序号数字最小长度
+     * @param withOutSeq 序号对象不包含序号，其值通过{@link #containSeq(String)}来判断
      * @return 补零后的字符串
+     */
+    String generate(String key, String type, Integer minLength, Boolean withOutSeq);
+
+    /**
+     * 同{@link #generate(String, String, Integer, Boolean)}，第四个参数默认为false
      */
     String generate(String key, String type, Integer minLength);
 
     /**
-     * 将{@link #generate(String, String)}得到的序号对象格式化为补零后的序号字符串，其最小长度通过{@link BaseConfig#getMinLength()}设定。实际上只会用到{@link Sequences#getSeq()}属性
+     * 将{@link #generate(String, String, Boolean)}得到的序号对象格式化为补零后的序号字符串，其最小长度通过{@link BaseConfig#getMinLength()}设定。实际上只会用到{@link Sequences#getSeq()}属性
      * <p/>
      * pattern支持：{@link FormatPlaceholder#YEAR}(当前年份)、{@link FormatPlaceholder#MONTH}}(当前月份)、{@link FormatPlaceholder#DAY}}(当前日期)、{@link FormatPlaceholder#SEQ}}(生成的字符串序号)几个枚举值通过{@link FormatPlaceholder#getPlaceholder()}得到的字符串
      *
@@ -355,7 +306,7 @@ public interface Generator {
     String format(Sequences sequences, String pattern);
 
     /**
-     * 将{@link #generate(String, String)}得到的序号对象格式化为补零后的序号字符串。实际上只会用到{@link Sequences#getSeq()}属性
+     * 将{@link #generate(String, String, Boolean)}得到的序号对象格式化为补零后的序号字符串。实际上只会用到{@link Sequences#getSeq()}属性
      * <p/>
      * pattern支持：{@link FormatPlaceholder#YEAR}(当前年份)、{@link FormatPlaceholder#MONTH}}(当前月份)、{@link FormatPlaceholder#DAY}}(当前日期)、{@link FormatPlaceholder#SEQ}}(生成的字符串序号)几个枚举值通过{@link FormatPlaceholder#getPlaceholder()}得到的字符串
      *
@@ -452,7 +403,7 @@ public interface Generator {
     /**
      * 锁定指定序号，在序号生成后，调用该序号的逻辑完成后需要执行此方法
      * <p/>
-     * 如办理案件时，先调用{@link #generate(String, String)}或者{@link #generate(String, String, Integer)}生成了序号，之后对案件进行了入库，如果入库完毕，则将该序号锁定，说明这个序号已被使用
+     * 如办理案件时，先调用{@link #generate(String, String, Boolean)}或者{@link #generate(String, String, Integer, Boolean)}生成了序号，之后对案件进行了入库，如果入库完毕，则将该序号锁定，说明这个序号已被使用
      * <p/>
      * 注意，此处的锁定非数据库中锁定，而是{@link SequencesUnused}和{@link SequencesUnlock}中均不存在key、type、seq相同的记录视为锁定。因此此处实际是把这两个表中的记录均删除了
      *
@@ -477,7 +428,7 @@ public interface Generator {
      * <p/>
      * {@link SequencesUnlock}中未通过{@link #lock(Sequences)}方法锁定的序号会一直存在，调用此方法会将里面的所有序号都移动到{@link SequencesUnused}中，下次生成序号时优先从{@link SequencesUnused}获取。
      */
-    void release();
+    boolean release();
 
     /**
      * 释放指定时间段内未使用的序号
@@ -487,7 +438,7 @@ public interface Generator {
      * @param begin 开始时间
      * @param end   结束时间
      */
-    void release(Date begin, Date end);
+    boolean release(Date begin, Date end);
 
     /**
      * 释放从开始时间开始，到现在时间之间未使用的序号。结束时间为方法执行时的时间
@@ -508,7 +459,7 @@ public interface Generator {
      *
      * @param sequences 需要释放的序号。一般是一个通过{@link Sequences#setKey(String)}、{@link Sequences#setType(String)}、{@link Sequences#setSeq(Long)}三方法一起手动构建或通过{@link Sequences#Sequences(String, String, Long)}构造方法构建的实例对象
      */
-    void release(Sequences sequences);
+    boolean release(Sequences sequences);
 
     /**
      * 忽略{@link Sequences#getSeq()}来释放指定序号。一般用于业务对象删除后，对应序号需要回收使用时。
@@ -518,17 +469,17 @@ public interface Generator {
      * @param sequences 需要释放的序号。一般是一个通过{@link Sequences#setKey(String)}、{@link Sequences#setType(String)}、{@link Sequences#setSeq(Long)}三方法一起手动构建或通过{@link Sequences#Sequences(String, String, Long)}构造方法构建的实例对象
      * @param ignoreSeq 是否忽略序号
      */
-    void release(Sequences sequences, boolean ignoreSeq);
+    boolean release(Sequences sequences, boolean ignoreSeq);
 
     /**
      * 清空所有闲置序号和未锁定序号
      */
-    void clear();
+    boolean clear();
 
     /**
      * 清空指定时间段内闲置序号和未锁定序号
      */
-    void clear(Date begin, Date end);
+    boolean clear(Date begin, Date end);
 
     /**
      * 清空从开始时间到限制时间之间闲置序号和未锁定序号，结束时间为方法执行时的时间
@@ -544,6 +495,5 @@ public interface Generator {
      */
     void clearBefore(Date end);
 }
-
 
 ```
