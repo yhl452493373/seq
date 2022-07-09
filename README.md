@@ -4,6 +4,8 @@
 
 用于生成全局自增序号，跳过的序号可以回收使用。
 
+***本生成器内部使用transactionTemplate进行事务管理，如果你项目中给使用此生成器的方法或类加了`@Transactional`注解，则需将新建一个Service来专门负责调用此生成器的方法，同时要给新建的类增加`@Transactional`注解，并设置`propagation = Propagation.NOT_SUPPORTED`***
+
 ---
 
 使用方法：
